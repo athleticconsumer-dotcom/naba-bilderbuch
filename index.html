@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>An-Naba Bilderbuch</title>
+<meta name="theme-color" content="#1d2321">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-48.png" sizes="48x48">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&family=Alegreya+Sans:wght@400;500;700&display=swap">
+<style>
+/* Layout: one kitab-like column; block tabs on top, then the ayat card, then the story card. Each word is a stacked pair (Arabic over German). */
+:root{
+  --bg:#f6f7f4; --paper:#fffefb; --fg:#1d2321; --muted:#6b716d; --rule:#dcdad2;
+  --verb:#c0392b; --noun:#1f5fa8; --harf:#2e7d4f; --black:#111;
+  --hl:#fbeea0; --tab:#e9ebe5; --tabOn:#1d2321; --tabOnFg:#fffefb;
+  --ar:"Scheherazade New","Amiri","Traditional Arabic",serif;
+  --de:"Alegreya Sans","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#161918; --paper:#1d2120; --fg:#ecebe6; --muted:#9aa09c; --rule:#333836;
+  --verb:#f07a6c; --noun:#7fb0ec; --harf:#72c995; --black:#f2f2ee;
+  --hl:#4a4320; --tab:#262b29; --tabOn:#ecebe6; --tabOnFg:#161918; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#161918; --paper:#1d2120; --fg:#ecebe6; --muted:#9aa09c; --rule:#333836;
+  --verb:#f07a6c; --noun:#7fb0ec; --harf:#72c995; --black:#f2f2ee;
+  --hl:#4a4320; --tab:#262b29; --tabOn:#ecebe6; --tabOnFg:#161918; color-scheme:dark}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--de);font-size:15px}
+.wrap{max-width:880px;margin:0 auto;padding-block:24px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
+header{display:flex;flex-direction:column;gap:2px}
+header h1{font-family:var(--ar);font-size:2.3rem;margin:0;direction:rtl;text-align:right;line-height:1.5}
+header p{margin:0;color:var(--muted);text-wrap:balance}
+.tabs{display:flex;flex-wrap:wrap;gap:6px}
+.tabs button{font:inherit;font-weight:600;border:0;border-radius:999px;padding:7px 14px;background:var(--tab);color:var(--fg);cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--tabOn);color:var(--tabOnFg)}
+.tabs button:focus-visible,.tools button:focus-visible{outline:2px solid var(--noun);outline-offset:2px}
+.tools{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.9rem}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:11px;height:11px;border-radius:50%;display:inline-block;border:1px solid var(--rule)}
+.legend .hlk{width:22px;height:12px;border-radius:3px;background:var(--hl);border:0}
+.tools button{font:inherit;border:1px solid var(--rule);background:var(--paper);color:var(--fg);border-radius:6px;padding:6px 12px;cursor:pointer}
+.card{background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:6px 18px 10px}
+.card h2{margin:12px 0 2px;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.card .sub{margin:0 0 4px;color:var(--muted);font-size:.92rem}
+.row{direction:rtl;display:flex;flex-wrap:wrap;gap:10px 11px;align-items:flex-start;padding-block:12px 10px;border-bottom:1px solid var(--rule)}
+.row:last-child{border-bottom:0}
+.sent{padding-block:12px 12px;border-bottom:1px solid var(--rule);display:flex;flex-direction:column;gap:6px}
+.sent:last-child{border-bottom:0}
+.sent .row{border:0;padding:0}
+.sent .tr{margin:0;color:var(--muted);font-size:.95rem;font-style:italic}
+.w{display:flex;flex-direction:column;align-items:center;min-width:0;max-width:160px;border-radius:5px;padding:0 3px}
+.w .a{font-family:var(--ar);font-size:2rem;line-height:1.85;white-space:nowrap}
+.w .d{direction:ltr;font-size:.86rem;line-height:1.2;text-align:center;opacity:.85;border-top:1px solid var(--rule);padding-top:3px;margin-top:-4px;padding-bottom:3px}
+.w.mark{background:var(--hl)}
+.p,.num{font-family:var(--ar);font-size:1.9rem;line-height:1.85;color:var(--muted)}
+.num{color:var(--black)}
+.v .a{color:var(--verb)} .n .a{color:var(--noun)} .h .a{color:var(--harf)} .e .a{color:var(--black)}
+body.hide-de .w .d{visibility:hidden}
+body.hide-de .sent .tr{visibility:hidden}
+.note{font-size:.9rem;color:var(--muted);margin:0}
+@media (max-width:480px){.w .a{font-size:1.7rem}.w .d{font-size:.8rem}.p,.num{font-size:1.55rem}}
+
+.page{background:var(--paper);border:1px solid var(--rule);border-radius:8px;overflow:hidden;display:flex;flex-direction:column}
+.pic{background:#e8e2d6;line-height:0}
+.pic svg{width:100%;height:auto;display:block;aspect-ratio:400/250}
+.text{padding:14px 18px 16px;display:flex;flex-direction:column;gap:8px}
+.text .row{border:0;padding:0}
+.text .tr{margin:0;color:var(--muted);font-size:1rem;font-style:italic}
+.text h2{margin:0;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.ayatpage .row{border-bottom:1px solid var(--rule);padding-block:10px}
+.ayatpage .row:last-child{border-bottom:0}
+.cover{font-family:var(--ar);direction:rtl;text-align:center;font-size:2rem;line-height:1.6;padding:6px 0 0}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.nav button{font:inherit;font-weight:600;border:1px solid var(--rule);background:var(--paper);color:var(--fg);border-radius:999px;padding:9px 18px;cursor:pointer;min-width:110px}
+.nav button:disabled{opacity:.4;cursor:default}
+.nav button:focus-visible{outline:2px solid var(--noun);outline-offset:2px}
+.nav .count{color:var(--muted);font-variant-numeric:tabular-nums}
+.dots{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.dots span{width:8px;height:8px;border-radius:50%;background:var(--rule)}
+.dots span.on{background:var(--fg)}
+#all .page{margin-bottom:16px}
+body.allmode #single,body.allmode .nav,body.allmode .dots{display:none}
+body:not(.allmode) #all{display:none}
+.toolbtns{display:flex;gap:8px;flex-wrap:wrap}
+
+:root{--ok:#2e7d4f;--okbg:#e3f1e7;--bad:#c0392b;--badbg:#f8e1dd}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ok:#72c995;--okbg:#1f3a2a;--bad:#f07a6c;--badbg:#45231f}}
+:root[data-theme="dark"]{--ok:#72c995;--okbg:#1f3a2a;--bad:#f07a6c;--badbg:#45231f}
+.games{padding:14px 18px 18px;display:flex;flex-direction:column;gap:14px}
+.games h2{margin:0;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.gtabs{display:flex;flex-wrap:wrap;gap:6px}
+.gtabs button{font:inherit;font-weight:600;border:1px solid var(--rule);border-radius:999px;padding:6px 13px;background:var(--paper);color:var(--fg);cursor:pointer}
+.gtabs button[aria-pressed="true"]{background:var(--tabOn);color:var(--tabOnFg);border-color:var(--tabOn)}
+.garea{display:flex;flex-direction:column;gap:12px;min-height:240px}
+.gtop{display:flex;justify-content:space-between;color:var(--muted);font-size:.92rem;font-variant-numeric:tabular-nums}
+.bar{height:6px;background:var(--rule);border-radius:3px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ok);transition:width .25s}
+.prompt{text-align:center;padding:6px 0}
+.prompt .big{font-family:var(--ar);font-size:3rem;line-height:1.6;direction:rtl}
+.prompt .de{font-size:1.35rem;font-weight:600}
+.prompt .hint{color:var(--muted);font-size:.92rem}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.opt{font:inherit;font-size:1.02rem;border:1.5px solid var(--rule);background:var(--bg);color:var(--fg);border-radius:8px;padding:10px 8px;cursor:pointer;min-height:52px;text-align:center}
+.opt.arx{font-family:var(--ar);font-size:1.7rem;line-height:1.4;direction:rtl;padding:4px 8px}
+.opt:focus-visible{outline:2px solid var(--noun);outline-offset:2px}
+.opt.right{background:var(--okbg);border-color:var(--ok)}
+.opt.wrong{background:var(--badbg);border-color:var(--bad)}
+.opt.sel{border-color:var(--fg);box-shadow:inset 0 0 0 1.5px var(--fg)}
+.opt.done{opacity:.25;cursor:default}
+.opt.cv{color:var(--verb);font-weight:700}.opt.cn{color:var(--noun);font-weight:700}.opt.ch{color:var(--harf);font-weight:700}.opt.ce{color:var(--black);font-weight:700}
+.pairs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pairs .col{display:flex;flex-direction:column;gap:8px;min-width:0}
+.gap{display:inline-block;min-width:70px;border-bottom:2px dashed var(--muted);margin-inline:4px}
+.feedback{min-height:1.4em;text-align:center;font-weight:600}
+.feedback.ok{color:var(--ok)}.feedback.no{color:var(--bad)}
+.endbox{text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center;padding:20px 0}
+.endbox .big{font-size:1.4rem;font-weight:700}
+.endbox button{font:inherit;font-weight:600;border:0;border-radius:999px;padding:9px 20px;background:var(--tabOn);color:var(--tabOnFg);cursor:pointer}
+@media (prefers-reduced-motion:no-preference){.shake{animation:sh .3s}@keyframes sh{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}}
+.gaprow .w .a{font-size:1.75rem}
+
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.sync{color:var(--muted);font-size:.88rem}
+.authbtn{font:inherit;font-weight:600;border:1px solid var(--rule);background:var(--paper);color:var(--fg);border-radius:999px;padding:6px 14px;cursor:pointer}
+.tabs button .ck{color:var(--ok);margin-inline-start:4px}
+.tabs button[aria-pressed="true"] .ck{color:inherit}
+.gtabs button .best{font-weight:400;opacity:.75;margin-inline-start:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar"><span id="sync" class="sync">Nur auf diesem Gerät gespeichert</span><button type="button" id="authBtn" class="authbtn" hidden>Mit Google anmelden</button></div>
+  <header>
+    <h1>سُورَةُ النَّبَإِ · مِنْ ١ إِلَى ٣٠</h1>
+    <p>Ein Bilderbuch: zuerst die Ayat, dann eine kleine Geschichte, am Ende Spiele zum Üben.</p>
+  </header>
+  <nav class="tabs" id="tabs" aria-label="Ayat-Blöcke"></nav>
+  <div class="tools">
+    <div class="legend">
+      <span><i style="background:var(--verb)"></i>Verb · rot</span>
+      <span><i style="background:var(--noun)"></i>Nomen · blau</span>
+      <span><i style="background:var(--harf)"></i>Partikel · grün</span>
+      <span><i style="background:var(--black)"></i>Name, Versnummer · schwarz</span>
+      <span><i class="hlk"></i>Wort aus den Ayat</span>
+    </div>
+    <div class="toolbtns">
+      <button type="button" id="toggle" aria-pressed="false">Deutsch verbergen</button>
+      <button type="button" id="allbtn" aria-pressed="false">Alle Seiten zeigen</button>
+    </div>
+  </div>
+  <div id="single"></div>
+  <div class="nav">
+    <button type="button" id="prev">‹ Zurück</button>
+    <span class="count" id="count"></span>
+    <button type="button" id="next">Weiter ›</button>
+  </div>
+  <div class="dots" id="dots"></div>
+  <div id="all"></div>
+  <p class="note">Bei den Spielen zeigt „✓“ ein fehlerfreies Spiel, „2 F“ dein bestes Ergebnis mit 2 Fehlern. Wörter, die du oft falsch hast, kommen öfter dran. Wörter mit angehängtem وَ / فَ / بِ / لِ oder Pronomen sind nach ihrem Hauptwort eingefärbt. Pfeiltasten blättern um.</p>
+</div>
+<script>
+const AYAT={
+1:"عَمَّ=worüber=h|يَتَسَاءَلُونَ=befragen sie einander=v",
+2:"عَنِ=über=h|النَّبَإِ=die Nachricht=n|الْعَظِيمِ=gewaltige=n",
+3:"الَّذِي=über die=n|هُمْ=sie=n|فِيهِ=darin=h|مُخْتَلِفُونَ=uneinig sind=n",
+4:"كَلَّا=keineswegs=h|سَيَعْلَمُونَ=sie werden es wissen=v",
+5:"ثُمَّ=dann=h|كَلَّا=keineswegs=h|سَيَعْلَمُونَ=sie werden es wissen=v",
+6:"أَلَمْ=haben nicht=h|نَجْعَلِ=Wir gemacht=v|الْأَرْضَ=die Erde=n|مِهَادًا=zu einer Lagerstatt=n",
+7:"وَالْجِبَالَ=und die Berge=n|أَوْتَادًا=zu Pflöcken=n",
+8:"وَخَلَقْنَاكُمْ=und Wir haben euch erschaffen=v|أَزْوَاجًا=in Paaren=n",
+9:"وَجَعَلْنَا=und Wir machten=v|نَوْمَكُمْ=euren Schlaf=n|سُبَاتًا=zur Ruhe=n",
+10:"وَجَعَلْنَا=und Wir machten=v|اللَّيْلَ=die Nacht=n|لِبَاسًا=zu einem Gewand=n",
+11:"وَجَعَلْنَا=und Wir machten=v|النَّهَارَ=den Tag=n|مَعَاشًا=zum Lebenserwerb=n",
+12:"وَبَنَيْنَا=und Wir bauten=v|فَوْقَكُمْ=über euch=n|سَبْعًا=sieben=n|شِدَادًا=feste=n",
+13:"وَجَعَلْنَا=und Wir machten=v|سِرَاجًا=eine Lampe=n|وَهَّاجًا=hell glühende=n",
+14:"وَأَنزَلْنَا=und Wir sandten herab=v|مِنَ=aus=h|الْمُعْصِرَاتِ=den Regenwolken=n|مَاءً=Wasser=n|ثَجَّاجًا=strömendes=n",
+15:"لِّنُخْرِجَ=um hervorzubringen=v|بِهِ=damit=h|حَبًّا=Korn=n|وَنَبَاتًا=und Pflanzen=n",
+16:"وَجَنَّاتٍ=und Gärten=n|أَلْفَافًا=dicht bewachsene=n",
+17:"إِنَّ=wahrlich=h|يَوْمَ=der Tag=n|الْفَصْلِ=der Entscheidung=n|كَانَ=ist=v|مِيقَاتًا=ein festgesetzter Termin=n",
+18:"يَوْمَ=am Tag, an dem=n|يُنفَخُ=geblasen wird=v|فِي=in=h|الصُّورِ=das Horn=n|فَتَأْتُونَ=dann kommt ihr=v|أَفْوَاجًا=in Scharen=n",
+19:"وَفُتِحَتِ=und geöffnet wird=v|السَّمَاءُ=der Himmel=n|فَكَانَتْ=und er wird zu=v|أَبْوَابًا=Toren=n",
+20:"وَسُيِّرَتِ=und versetzt werden=v|الْجِبَالُ=die Berge=n|فَكَانَتْ=und sie werden zu=v|سَرَابًا=einer Luftspiegelung=n",
+21:"إِنَّ=wahrlich=h|جَهَنَّمَ=die Hölle=e|كَانَتْ=ist=v|مِرْصَادًا=ein Lauerort=n",
+22:"لِّلطَّاغِينَ=für die Maßlosen=n|مَآبًا=eine Heimstätte=n",
+23:"لَّابِثِينَ=verweilend=n|فِيهَا=darin=h|أَحْقَابًا=lange Zeitalter=n",
+24:"لَّا=nicht=h|يَذُوقُونَ=kosten sie=v|فِيهَا=darin=h|بَرْدًا=Kühle=n|وَلَا=und nicht=h|شَرَابًا=Getränk=n",
+25:"إِلَّا=außer=h|حَمِيمًا=siedendes Wasser=n|وَغَسَّاقًا=und Eiter=n",
+26:"جَزَاءً=als Vergeltung=n|وِفَاقًا=angemessene=n",
+27:"إِنَّهُمْ=wahrlich, sie=h|كَانُوا=pflegten=v|لَا=nicht=h|يَرْجُونَ=zu erwarten=v|حِسَابًا=eine Abrechnung=n",
+28:"وَكَذَّبُوا=und sie leugneten=v|بِآيَاتِنَا=Unsere Zeichen=n|كِذَّابًا=völlig=n",
+29:"وَكُلَّ=und jedes=n|شَيْءٍ=Ding=n|أَحْصَيْنَاهُ=haben Wir erfasst=v|كِتَابًا=schriftlich=n",
+30:"فَذُوقُوا=so kostet!=v|فَلَن=denn nicht=h|نَّزِيدَكُمْ=werden Wir euch mehren=v|إِلَّا=außer=h|عَذَابًا=an Strafe=n"
+};
+
+const BLOCKS=[
+{from:1,to:5,title:"Die gewaltige Nachricht",story:[
+["جَلَسَ=saßen=v|النَّاسُ=die Leute=n|فِي=auf=h|السُّوقِ=dem Markt=n|وَهُمْ=und sie=*n|يَتَسَاءَلُونَ=befragten einander=*v|.","Die Leute saßen auf dem Markt und befragten einander."],
+["سَأَلَ=fragte=v|وَلَدٌ=ein Junge=n|صَغِيرٌ=kleiner=n|:|عَمَّ=worüber=*h|يَتَسَاءَلُونَ=befragen sie einander=*v|؟","Ein kleiner Junge fragte: Worüber befragen sie einander?"],
+["قَالَ=sagte=v|أَبُوهُ=sein Vater=n|:|يَتَسَاءَلُونَ=sie befragen einander=*v|عَنِ=über=*h|النَّبَإِ=die Nachricht=*n|الْعَظِيمِ=gewaltige=*n|.","Sein Vater sagte: Sie befragen einander über die gewaltige Nachricht."],
+["هُوَ=es ist=n|النَّبَأُ=die Nachricht=n|الَّذِي=über die=*n|هُمْ=sie=*n|فِيهِ=darin=*h|مُخْتَلِفُونَ=uneinig sind=*n|.","Es ist die Nachricht, über die sie uneinig sind."],
+["قَالَ=sagten=v|بَعْضُهُمْ=einige von ihnen=n|:|هُوَ=es ist=n|حَقٌّ=Wahrheit=n|.|وَقَالَ=und sagten=v|آخَرُونَ=andere=n|:|هُوَ=es ist=n|كَذِبٌ=Lüge=n|.","Einige sagten: Es ist die Wahrheit. Andere sagten: Es ist eine Lüge."],
+["قَالَ=sagte=v|الْأَبُ=der Vater=n|:|كَلَّا=keineswegs=*h|!|سَيَعْلَمُونَ=sie werden es wissen=*v|.","Der Vater sagte: Keineswegs! Sie werden es wissen."],
+["ثُمَّ=dann=*h|قَالَ=sagte er=v|مَرَّةً=ein Mal=n|أُخْرَى=weiteres=n|:|كَلَّا=keineswegs=*h|،|سَيَعْلَمُونَ=sie werden es wissen=*v|.","Dann sagte er noch einmal: Keineswegs, sie werden es wissen."]
+]},
+{from:6,to:11,title:"Die Nacht in der Wüste",story:[
+["خَرَجَ=ging hinaus=v|أَحْمَدُ=Ahmad=e|وَأُخْتُهُ=und seine Schwester=n|مَعَ=mit=n|جَدِّهِمَا=ihrem Großvater=n|إِلَى=in=h|الصَّحْرَاءِ=die Wüste=n|.","Ahmad und seine Schwester gingen mit ihrem Großvater in die Wüste."],
+["قَالَ=sagte=v|الْجَدُّ=der Großvater=n|:|جَعَلَ=gemacht hat=v|اللهُ=Allah=e|الْأَرْضَ=die Erde=*n|مِهَادًا=zu einer Lagerstatt=*n|،|وَالْجِبَالَ=und die Berge=*n|أَوْتَادًا=zu Pflöcken=*n|.","Der Großvater sagte: Allah hat die Erde zu einer Lagerstatt gemacht und die Berge zu Pflöcken."],
+["قَالَ=sagte=v|أَحْمَدُ=Ahmad=e|:|وَجَعَلْنَا=und wir haben gemacht=*v|لِلْخَيْمَةِ=für das Zelt=n|أَوْتَادًا=Pflöcke=*n|أَيْضًا=auch=n|!","Ahmad sagte: Und wir haben auch Pflöcke für das Zelt gemacht!"],
+["لَمَّا=als=h|جَاءَ=kam=v|اللَّيْلُ=die Nacht=n|قَالَ=sagte=v|الْجَدُّ=der Großvater=n|:|جَعَلَ=gemacht hat=v|اللهُ=Allah=e|اللَّيْلَ=die Nacht=*n|لِبَاسًا=zu einem Gewand=*n|،","Als die Nacht kam, sagte der Großvater: Allah hat die Nacht zu einem Gewand gemacht,"],
+["وَجَعَلَ=und Er machte=v|نَوْمَكُمْ=euren Schlaf=*n|سُبَاتًا=zur Ruhe=*n|،|وَجَعَلَ=und Er machte=v|النَّهَارَ=den Tag=*n|مَعَاشًا=zum Lebenserwerb=*n|.","und euren Schlaf zur Ruhe und den Tag zum Lebenserwerb."],
+["ثُمَّ=dann=h|قَرَأَ=las=v|الْجَدُّ=der Großvater=n|:|﴿|أَلَمْ=haben nicht=*h|نَجْعَلِ=Wir gemacht=*v|الْأَرْضَ=die Erde=*n|مِهَادًا=zu einer Lagerstatt=*n|﴾","Dann las der Großvater: Haben Wir nicht die Erde zu einer Lagerstatt gemacht?"],
+["وَقَرَأَ=und er las=v|:|﴿|وَخَلَقْنَاكُمْ=und Wir haben euch erschaffen=*v|أَزْوَاجًا=in Paaren=*n|﴾","Und er las: Und Wir haben euch in Paaren erschaffen."],
+["سَأَلَتْ=fragte=v|أُخْتُهُ=seine Schwester=n|:|أَزْوَاجًا=in Paaren=*n|؟|قَالَ=er sagte=v|:|نَعَمْ=ja=h|،|رَجُلًا=Mann=n|وَامْرَأَةً=und Frau=n|،|مِثْلَ=wie=n|جَدِّكِ=dein Großvater=n|وَجَدَّتِكِ=und deine Großmutter=n|.","Seine Schwester fragte: In Paaren? Er sagte: Ja, Mann und Frau, wie dein Großvater und deine Großmutter."]
+]},
+{from:12,to:16,title:"Der Bauer und der Regen",story:[
+["فِي=in=h|قَرْيَةٍ=einem Dorf=n|صَغِيرَةٍ=kleinen=n|عَاشَ=lebte=v|فَلَّاحٌ=ein Bauer=n|مَعَ=mit=n|أَبْنَائِهِ=seinen Söhnen=n|.","In einem kleinen Dorf lebte ein Bauer mit seinen Söhnen."],
+["نَظَرَ=schaute=v|الْفَلَّاحُ=der Bauer=n|إِلَى=zum=h|السَّمَاءِ=Himmel=n|وَقَالَ=und sagte=v|:|بَنَى=gebaut hat=v|اللهُ=Allah=e|فَوْقَكُمْ=über euch=*n|سَبْعًا=sieben=*n|شِدَادًا=feste (Himmel)=*n|.","Der Bauer schaute zum Himmel und sagte: Allah hat über euch sieben feste Himmel gebaut."],
+["قَالَ=sagte=v|ابْنُهُ=sein Sohn=n|:|وَبَنَيْنَا=und wir haben gebaut=*v|نَحْنُ=wir=n|بَيْتًا=ein Haus=n|صَغِيرًا=kleines=n|فَقَطْ=nur=h|!","Sein Sohn sagte: Und wir haben nur ein kleines Haus gebaut!"],
+["وَفِي=und in=h|اللَّيْلِ=der Nacht=n|قَالَ=sagte=v|الِابْنُ=der Sohn=n|:|وَجَعَلْنَا=und wir haben gemacht=*v|فِي=in=h|الْبَيْتِ=dem Haus=n|سِرَاجًا=eine Lampe=*n|صَغِيرًا=kleine=n|.","In der Nacht sagte der Sohn: Und wir haben im Haus eine kleine Lampe gemacht."],
+["قَالَ=sagte=v|الْأَبُ=der Vater=n|:|وَجَعَلَ=und gemacht hat=v|اللهُ=Allah=e|الشَّمْسَ=die Sonne=n|سِرَاجًا=zu einer Lampe=*n|وَهَّاجًا=hell glühenden=*n|.","Der Vater sagte: Und Allah hat die Sonne zu einer hell glühenden Lampe gemacht."],
+["ثُمَّ=dann=h|أَنْزَلَ=sandte herab=v|اللهُ=Allah=e|مِنَ=aus=*h|الْمُعْصِرَاتِ=den Regenwolken=*n|مَاءً=Wasser=*n|ثَجَّاجًا=strömendes=*n|.","Dann sandte Allah aus den Regenwolken strömendes Wasser herab."],
+["وَأَنْزَلْنَا=und wir ließen hinab=*v|الدَّلْوَ=den Eimer=n|فِي=in=h|الْبِئْرِ=den Brunnen=n|،|وَسَقَيْنَا=und wir bewässerten=v|الْأَرْضَ=die Erde=n|بِالْمَاءِ=mit dem Wasser=n|لِنُخْرِجَ=um hervorzubringen=*v|بِهِ=damit=*h|حَبًّا=Korn=*n|وَنَبَاتًا=und Pflanzen=*n|.","Wir ließen den Eimer in den Brunnen hinab und bewässerten die Erde, um damit Korn und Pflanzen hervorzubringen."],
+["وَبَعْدَ=und nach=n|شُهُورٍ=Monaten=n|صَارَتِ=wurde=v|الْأَرْضُ=die Erde=n|حُقُولًا=zu Feldern=n|وَجَنَّاتٍ=und Gärten=*n|أَلْفَافًا=dicht bewachsenen=*n|.","Und nach einigen Monaten wurde die Erde zu Feldern und dicht bewachsenen Gärten."]
+]},
+{from:17,to:21,title:"Der Tag der Prüfung",story:[
+["كَانَ=war=*v|يَوْمُ=der Tag=n|الِامْتِحَانِ=der Prüfung=n|مِيقَاتًا=ein festgesetzter Termin=*n|لِكُلِّ=für alle=n|الطُّلَّابِ=Schüler=n|.","Der Prüfungstag war ein festgesetzter Termin für alle Schüler."],
+["قَالَ=sagte=v|الْمُعَلِّمُ=der Lehrer=n|:|سَيُدَقُّ=es wird geläutet=v|الْجَرَسُ=die Glocke=n|فَتَأْتُونَ=dann kommt ihr=*v|أَفْوَاجًا=in Scharen=*n|.","Der Lehrer sagte: Die Glocke wird läuten, dann kommt ihr in Scharen."],
+["وَسُيِّرَتِ=und in Fahrt gesetzt wurden=*v|الْحَافِلَاتُ=die Busse=n|فِي=am=h|الصَّبَاحِ=Morgen=n|إِلَى=zur=h|الْمَدْرَسَةِ=Schule=n|.","Am Morgen fuhren die Busse zur Schule."],
+["فِي=auf=h|الطَّرِيقِ=dem Weg=n|رَأَى=sahen=v|الطُّلَّابُ=die Schüler=n|بُحَيْرَةً=einen See=n|،|فَكَانَتْ=doch er war=*v|سَرَابًا=eine Luftspiegelung=*n|.","Auf dem Weg sahen die Schüler einen See, doch er war eine Luftspiegelung."],
+["وَفُتِحَتِ=und geöffnet wurden=*v|الْأَبْوَابُ=die Tore=n|،|فَدَخَلُوا=und sie betraten=v|الْمَدْرَسَةَ=die Schule=n|أَفْوَاجًا=in Scharen=*n|.","Die Tore wurden geöffnet, und sie betraten die Schule in Scharen."],
+["قَالَ=sagte=v|الْمُعَلِّمُ=der Lehrer=n|:|إِنَّ=wahrlich=*h|يَوْمَ=der Tag=*n|الْفَصْلِ=der Entscheidung=*n|أَعْظَمُ=ist gewaltiger=n|مِنْ=als=h|هَذَا=dieser=n|الْيَوْمِ=Tag=n|.","Der Lehrer sagte: Wahrlich, der Tag der Entscheidung ist gewaltiger als dieser Tag."],
+["يَوْمَ=am Tag, an dem=*n|يُنْفَخُ=geblasen wird=*v|فِي=in=*h|الصُّورِ=das Horn=*n|تُفْتَحُ=wird geöffnet=v|السَّمَاءُ=der Himmel=*n|فَتَصِيرُ=und er wird zu=v|أَبْوَابًا=Toren=*n|.","Am Tag, an dem ins Horn geblasen wird, öffnet sich der Himmel und wird zu Toren."],
+["وَتُسَيَّرُ=und versetzt werden=v|الْجِبَالُ=die Berge=*n|فَتَكُونُ=und sie werden zu=v|سَرَابًا=einer Luftspiegelung=*n|.","Und die Berge werden versetzt und werden zu einer Luftspiegelung."],
+["وَإِنَّ=und wahrlich=h|جَهَنَّمَ=die Hölle=*e|كَانَتْ=ist=*v|مِرْصَادًا=ein Lauerort=*n|،|فَاسْتَعِدُّوا=so bereitet euch vor=v|لِذَلِكَ=auf jenen=n|الْيَوْمِ=Tag=n|!","Und wahrlich, die Hölle ist ein Lauerort, also bereitet euch auf jenen Tag vor!"]
+]},
+{from:22,to:26,title:"Der ungerechte König",story:[
+["كَانَ=es gab=v|فِي=in=h|مَدِينَةٍ=einer Stadt=n|قَدِيمَةٍ=alten=n|مَلِكٌ=einen König=n|ظَالِمٌ=ungerechten=n|.","In einer alten Stadt gab es einen ungerechten König."],
+["وَكَانَ=und war=v|قَصْرُهُ=sein Palast=n|مَآبًا=eine Heimstätte=*n|لِلطَّاغِينَ=für die Maßlosen=*n|.","Sein Palast war eine Heimstätte für die Maßlosen."],
+["سَجَنَ=er sperrte ein=v|الْفُقَرَاءَ=die Armen=n|فِي=in=h|قَلْعَةٍ=einer Burg=n|مُظْلِمَةٍ=dunklen=n|،|فَكَانُوا=und sie waren=v|لَابِثِينَ=verweilend=*n|فِيهَا=darin=*h|أَحْقَابًا=lange Zeiten=*n|.","Er sperrte die Armen in eine dunkle Burg, und sie blieben lange Zeiten darin."],
+["لَا=nicht=*h|يَذُوقُونَ=kosteten sie=*v|فِيهَا=darin=*h|بَرْدًا=Kühle=*n|وَلَا=und nicht=*h|شَرَابًا=Getränk=*n|.","Sie kosteten darin weder Kühle noch Getränk."],
+["ثُمَّ=dann=h|مَاتَ=starb=v|الْمَلِكُ=der König=n|،|فَقَالَ=und es sagte=v|شَيْخٌ=ein alter Mann=n|حَكِيمٌ=weiser=n|:","Dann starb der König, und ein weiser alter Mann sagte:"],
+["فِي=im=h|الْآخِرَةِ=Jenseits=n|لَا=nicht=h|يَذُوقُ=kosten=v|الطُّغَاةُ=die Tyrannen=n|إِلَّا=außer=*h|حَمِيمًا=siedendes Wasser=*n|وَغَسَّاقًا=und Eiter=*n|،","Im Jenseits kosten die Tyrannen nichts außer siedendem Wasser und Eiter,"],
+["جَزَاءً=als Vergeltung=*n|وِفَاقًا=angemessene=*n|لِمَا=für das, was=n|فَعَلُوا=sie taten=v|.","als angemessene Vergeltung für das, was sie getan haben."]
+]},
+{from:27,to:30,title:"Das Heft des Händlers",story:[
+["كَانَ=es hatte=v|لِتَاجِرٍ=ein Händler=n|عُمَّالٌ=Arbeiter=n|كَسَالَى=faule=n|.","Ein Händler hatte faule Arbeiter."],
+["إِنَّهُمْ=wahrlich, sie=*h|كَانُوا=pflegten=*v|لَا=nicht=*h|يَرْجُونَ=zu erwarten=*v|حِسَابًا=eine Abrechnung=*n|.","Wahrlich, sie erwarteten keine Abrechnung."],
+["كَتَبَ=schrieb=v|التَّاجِرُ=der Händler=n|آيَاتٍ=Hinweise=n|وَاضِحَةً=klare=n|عَلَى=an=h|الْجِدَارِ=die Wand=n|.","Der Händler schrieb klare Hinweise an die Wand."],
+["قَالَ=er sagte=v|:|كَتَبْنَا=wir schrieben=v|لَهُمْ=für sie=h|،|وَكَذَّبُوا=und sie leugneten=*v|بِآيَاتِنَا=unsere Hinweise=*n|كِذَّابًا=völlig=*n|.","Er sagte: Wir haben für sie geschrieben, und sie haben unsere Hinweise völlig geleugnet."],
+["ثُمَّ=dann=h|فَتَحَ=öffnete er=v|دَفْتَرَهُ=sein Heft=n|وَقَالَ=und sagte=v|:|وَكُلَّ=und jedes=*n|شَيْءٍ=Ding=*n|أَحْصَيْنَاهُ=haben wir erfasst=*v|كِتَابًا=schriftlich=*n|.","Dann öffnete er sein Heft und sagte: Und jedes Ding haben wir schriftlich erfasst."],
+["فَذُوقُوا=so kostet=*v|نَتِيجَةَ=das Ergebnis=n|كَسَلِكُمْ=eurer Faulheit=n|،|فَلَنْ=denn nicht=*h|نَزِيدَكُمْ=werden wir euch mehren=*v|إِلَّا=außer=*h|عَمَلًا=an Arbeit=n|!","So kostet das Ergebnis eurer Faulheit, wir geben euch nur noch mehr Arbeit!"],
+["قَالَ=sagte=v|ابْنُ=der Sohn=n|التَّاجِرِ=des Händlers=n|:|هَذَا=das ist=n|فِي=im=h|الدُّنْيَا=Diesseits=n|،|أَمَّا=was aber=h|الطُّغَاةُ=die Tyrannen (betrifft)=n|فِي=im=h|الْآخِرَةِ=Jenseits=n|فَلَا=so nicht=h|يُزَادُونَ=wird ihnen gemehrt=v|إِلَّا=außer=h|عَذَابًا=an Strafe=*n|.","Der Sohn des Händlers sagte: Das ist im Diesseits. Den Tyrannen im Jenseits aber wird nur die Strafe gemehrt."]
+]}
+];
+
+// Bilderbuch-Zeichnungen: flache SVG-Szenen, Figuren ohne Gesicht. viewBox 400x250
+const ART=(()=>{
+const C={sky:"#bfe1ef",sky2:"#e8f4ec",night:"#1f2d4d",night2:"#3b4a72",dusk:"#f3b88a",dusk2:"#f7dcb8",
+ sand:"#e8cf9b",sand2:"#dcbb7e",grass:"#9cc779",grass2:"#86b664",road:"#9a9a92",floor:"#d9c3a0",wall:"#f1e6d2",
+ mount:"#a88f78",mount2:"#8d7663",skin:"#d9a57c",skin2:"#b98260",ink:"#3a3330"};
+const robes=["#5b7fa6","#b35c44","#6f9a5e","#c79a3d","#8a6aa3","#4f8f8f","#a0674f","#7b8a94"];
+let out,uid=0;
+const add=s=>{out+=s};
+function sky(k){
+  const g={day:[C.sky,C.sky2],night:[C.night,C.night2],dusk:[C.dusk,C.dusk2],storm:["#7d8a99","#b7c0c7"],dark:["#3a2a35","#7a4a3a"]}[k];
+  add(`<defs><linearGradient id="sg${uid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${g[0]}"/><stop offset="1" stop-color="${g[1]}"/></linearGradient></defs><rect width="400" height="250" fill="url(#sg${uid})"/>`);
+  if(k==="night"){for(let i=0;i<26;i++){const x=(i*73)%400,y=(i*37)%120+8;add(`<circle cx="${x}" cy="${y}" r="${i%3?1:1.6}" fill="#fff" opacity=".8"/>`)}}
+}
+function indoor(){add(`<rect width="400" height="250" fill="${C.wall}"/><rect y="190" width="400" height="60" fill="${C.floor}"/><rect y="188" width="400" height="4" fill="#c9b18a"/>`)}
+function ground(k,y=190){
+  const c={sand:[C.sand,C.sand2],grass:[C.grass,C.grass2],road:[C.sand,C.road],stone:["#b9ada0","#a3968a"],dark:["#5b4a44","#4a3b36"]}[k];
+  add(`<path d="M0 ${y} Q100 ${y-10} 200 ${y} T400 ${y} V250 H0Z" fill="${c[0]}"/>`);
+  if(k==="road")add(`<rect y="${y+18}" width="400" height="26" fill="${C.road}"/><g stroke="#f2eee4" stroke-width="3" stroke-dasharray="18 14"><line x1="0" y1="${y+31}" x2="400" y2="${y+31}"/></g>`);
+  else add(`<path d="M0 ${y+25} Q120 ${y+15} 240 ${y+27} T400 ${y+22} V250 H0Z" fill="${c[1]}" opacity=".6"/>`);
+}
+function sun(x,y,r=22,rays=false){
+  if(rays)for(let i=0;i<12;i++){const a=i*Math.PI/6;add(`<line x1="${x+Math.cos(a)*(r+6)}" y1="${y+Math.sin(a)*(r+6)}" x2="${x+Math.cos(a)*(r+20)}" y2="${y+Math.sin(a)*(r+20)}" stroke="#f6b73c" stroke-width="4" stroke-linecap="round"/>`)}
+  add(`<circle cx="${x}" cy="${y}" r="${r+8}" fill="#fbe39a" opacity=".5"/><circle cx="${x}" cy="${y}" r="${r}" fill="#f6c24a"/>`);
+}
+function moon(x,y){add(`<circle cx="${x}" cy="${y}" r="30" fill="#f5edc8" opacity=".12"/><path d="M${x+6} ${y-18} A18 18 0 1 0 ${x+6} ${y+18} A14 14 0 1 1 ${x+6} ${y-18}Z" fill="#f5edc8"/>`)}
+function mountains(x,y,s=1,o=1){add(`<g transform="translate(${x} ${y}) scale(${s})" opacity="${o}"><path d="M0 0 L70 -95 L110 -55 L150 -120 L230 0Z" fill="${C.mount}"/><path d="M150 -120 L130 -88 L150 -96 L168 -84Z" fill="#f4efe6"/><path d="M70 -95 L58 -78 L72 -82 L82 -76Z" fill="#f4efe6"/><path d="M110 -55 L150 -120 L230 0 H160Z" fill="${C.mount2}" opacity=".5"/></g>`)}
+function dunes(){add(`<path d="M0 175 Q80 140 170 170 T400 160 V200 H0Z" fill="${C.sand2}"/>`)}
+function tent(x,y,s=1){add(`<g transform="translate(${x} ${y}) scale(${s})"><path d="M-60 0 L0 -70 L60 0Z" fill="#c9734a"/><path d="M0 -70 L60 0 H20Z" fill="#a95a37"/><path d="M-12 0 L0 -36 L12 0Z" fill="#5a3326"/><line x1="0" y1="-70" x2="0" y2="-82" stroke="${C.ink}" stroke-width="3"/><line x1="-60" y1="0" x2="-78" y2="6" stroke="${C.ink}" stroke-width="1.5"/><line x1="60" y1="0" x2="78" y2="6" stroke="${C.ink}" stroke-width="1.5"/></g>`);peg(x-80,y+8);peg(x+80,y+8)}
+function peg(x,y){add(`<path d="M${x-3} ${y-12} h6 l-3 14Z" fill="#7a5a3a"/>`)}
+function house(x,y,s=1,lit=false){add(`<g transform="translate(${x} ${y}) scale(${s})"><rect x="-40" y="-50" width="80" height="50" fill="#e9dcc3"/><path d="M-48 -50 L0 -82 L48 -50Z" fill="#b86b4b"/><rect x="-10" y="-28" width="20" height="28" fill="#7a5137"/><rect x="18" y="-40" width="14" height="14" fill="${lit?"#ffd36b":"#8fb6c9"}"/>${lit?'<circle cx="25" cy="-33" r="16" fill="#ffd36b" opacity=".3"/>':""}</g>`)}
+function lamp(x,y,s=1){add(`<g transform="translate(${x} ${y}) scale(${s})"><circle cx="0" cy="-22" r="26" fill="#ffd36b" opacity=".35"/><path d="M-16 0 Q0 -14 16 0 Q8 6 0 6 Q-8 6 -16 0Z" fill="#b5803e"/><path d="M14 -2 L24 -6" stroke="#b5803e" stroke-width="4" stroke-linecap="round"/><path d="M0 -8 Q-6 -18 0 -30 Q6 -18 0 -8Z" fill="#f6a23a"/></g>`)}
+function cloud(x,y,s=1,dark=false){const f=dark?"#6f7b88":"#ffffff";add(`<g transform="translate(${x} ${y}) scale(${s})" fill="${f}"><circle cx="0" cy="0" r="18"/><circle cx="20" cy="-8" r="22"/><circle cx="42" cy="0" r="17"/><rect x="0" y="0" width="42" height="17"/></g>`)}
+function rain(x1,x2,y1,y2){for(let x=x1;x<x2;x+=12)for(let y=y1;y<y2;y+=26){const yy=y+(x%24?10:0);add(`<line x1="${x}" y1="${yy}" x2="${x-4}" y2="${yy+12}" stroke="#4a86b8" stroke-width="2" stroke-linecap="round"/>`)}}
+function well(x,y){add(`<g transform="translate(${x} ${y})"><rect x="-28" y="-30" width="56" height="30" fill="#a3968a"/><path d="M-28 -30 h56" stroke="#7f7368" stroke-width="4"/><line x1="-24" y1="-30" x2="-24" y2="-78" stroke="#6d4c33" stroke-width="5"/><line x1="24" y1="-30" x2="24" y2="-78" stroke="#6d4c33" stroke-width="5"/><path d="M-34 -78 L0 -96 L34 -78Z" fill="#b86b4b"/><line x1="0" y1="-78" x2="0" y2="-44" stroke="${C.ink}" stroke-width="1.5"/><path d="M-8 -44 h16 l-3 12 h-10Z" fill="#7a5a3a"/></g>`)}
+function sprouts(x1,x2,y,big=false){for(let x=x1;x<x2;x+=22){if(big){add(`<g transform="translate(${x} ${y})"><line x1="0" y1="0" x2="0" y2="-34" stroke="#7a8b3a" stroke-width="2"/><ellipse cx="0" cy="-38" rx="4" ry="9" fill="#d8b04a"/><ellipse cx="-6" cy="-22" rx="7" ry="3" fill="#7aa64e" transform="rotate(-30 -6 -22)"/></g>`)}else add(`<path d="M${x} ${y} q-6 -10 -2 -14 M${x} ${y} q6 -10 2 -14" stroke="#5f9a45" stroke-width="3" fill="none" stroke-linecap="round"/>`)}}
+function rows(x1,x2,y){for(let i=0;i<3;i++)add(`<path d="M${x1} ${y+i*12} H${x2}" stroke="#8b6a45" stroke-width="5" stroke-linecap="round" opacity=".55"/>`)}
+function tree(x,y,s=1){add(`<g transform="translate(${x} ${y}) scale(${s})"><rect x="-5" y="-40" width="10" height="40" fill="#7a5137"/><circle cx="0" cy="-58" r="28" fill="#5f9a45"/><circle cx="-18" cy="-46" r="18" fill="#6fae52"/><circle cx="18" cy="-48" r="18" fill="#57903f"/><circle cx="-6" cy="-64" r="4" fill="#d9573f"/><circle cx="12" cy="-52" r="4" fill="#d9573f"/></g>`)}
+function stall(x,y,col){add(`<g transform="translate(${x} ${y})"><rect x="-38" y="-34" width="76" height="34" fill="#c8a777"/><path d="M-46 -56 H46 L40 -38 H-40Z" fill="${col}"/><path d="M-46 -56 H46" stroke="#fff" stroke-width="2" stroke-dasharray="10 10"/><circle cx="-20" cy="-38" r="7" fill="#e07b39"/><circle cx="-6" cy="-38" r="7" fill="#d9573f"/><circle cx="10" cy="-38" r="7" fill="#9cc779"/><circle cx="24" cy="-38" r="7" fill="#f2c14e"/><line x1="-42" y1="-38" x2="-42" y2="0" stroke="#6d4c33" stroke-width="3"/><line x1="42" y1="-38" x2="42" y2="0" stroke="#6d4c33" stroke-width="3"/></g>`)}
+function bus(x,y,s=1){add(`<g transform="translate(${x} ${y}) scale(${s})"><rect x="-60" y="-46" width="120" height="40" rx="8" fill="#f2b632"/><rect x="-60" y="-20" width="120" height="6" fill="#d8962a"/>${[-48,-26,-4,18].map(a=>`<rect x="${a}" y="-40" width="18" height="14" rx="2" fill="#bfe1ef"/>`).join("")}<rect x="42" y="-40" width="14" height="22" rx="2" fill="#bfe1ef"/><circle cx="-34" cy="-6" r="9" fill="#333"/><circle cx="34" cy="-6" r="9" fill="#333"/><circle cx="-34" cy="-6" r="3" fill="#aaa"/><circle cx="34" cy="-6" r="3" fill="#aaa"/></g>`)}
+function school(x,y,open=false){add(`<g transform="translate(${x} ${y})"><rect x="-90" y="-80" width="180" height="80" fill="#e6d3b3"/><path d="M-98 -80 H98 L84 -98 H-84Z" fill="#8f5a43"/>${[-70,-40,30,60].map(a=>`<rect x="${a}" y="-64" width="16" height="18" fill="#8fb6c9"/>`).join("")}<rect x="-12" y="-100" width="24" height="12" fill="#8f5a43"/><path d="M-6 -100 h12 v-8 h-12z" fill="#f2c14e"/>${open?`<rect x="-22" y="-44" width="44" height="44" fill="#4a3528"/><rect x="-36" y="-44" width="14" height="44" fill="#6d4c33"/><rect x="22" y="-44" width="14" height="44" fill="#6d4c33"/>`:`<rect x="-22" y="-44" width="44" height="44" fill="#6d4c33"/><line x1="0" y1="-44" x2="0" y2="0" stroke="#4a3528" stroke-width="2"/>`}</g>`)}
+function bell(x,y){add(`<g transform="translate(${x} ${y})"><path d="M-16 0 Q-16 -28 0 -30 Q16 -28 16 0Z" fill="#e0a83a"/><rect x="-20" y="-2" width="40" height="5" rx="2" fill="#c08a2a"/><circle cx="0" cy="7" r="4" fill="#c08a2a"/><path d="M-26 -22 q-6 8 0 16 M26 -22 q6 8 0 16" stroke="#c08a2a" stroke-width="2" fill="none"/></g>`)}
+function board(x,y,lines=4,w=130){add(`<g transform="translate(${x} ${y})"><rect x="0" y="0" width="${w}" height="80" rx="3" fill="#2f4a3e" stroke="#8a6a45" stroke-width="5"/>${Array.from({length:lines},(_,i)=>`<line x1="14" y1="${18+i*16}" x2="${w-14-(i%2)*30}" y2="${18+i*16}" stroke="#e9efe7" stroke-width="3" stroke-linecap="round" opacity=".85"/>`).join("")}</g>`)}
+function writtenWall(x,y){add(`<g transform="translate(${x} ${y})"><rect x="0" y="0" width="150" height="90" fill="#efe2c8" stroke="#c9b18a" stroke-width="3"/>${[0,1,2,3].map(i=>`<path d="M${135} ${20+i*18} H${30+(i%2)*25}" stroke="#2f2a26" stroke-width="3" stroke-linecap="round"/><circle cx="18" cy="${20+i*18}" r="4" fill="#b35c44"/>`).join("")}</g>`)}
+function lake(x,y,w=120){add(`<g opacity=".75"><ellipse cx="${x}" cy="${y}" rx="${w/2}" ry="12" fill="#9fd0e6"/>${[0,1,2].map(i=>`<path d="M${x-w/2+16} ${y-2+i*5} q12 -4 24 0 t24 0 t24 0 t24 0" stroke="#e8f6fb" stroke-width="2" fill="none" stroke-dasharray="6 6"/>`).join("")}</g>`)}
+function shimmer(x1,x2,y){for(let i=0;i<4;i++)add(`<path d="M${x1} ${y+i*7} q15 -5 30 0 t30 0 t30 0 t30 0 t30 0" stroke="#fff" stroke-width="2" fill="none" opacity=".5"/>`)}
+function castle(x,y,dark=false){const f=dark?"#5d5250":"#c9b9a3",d=dark?"#463d3b":"#a8977f";add(`<g transform="translate(${x} ${y})"><rect x="-70" y="-90" width="140" height="90" fill="${f}"/><rect x="-90" y="-120" width="40" height="120" fill="${d}"/><rect x="50" y="-120" width="40" height="120" fill="${d}"/>${[-90,-74,-58,50,66,82].map(a=>`<rect x="${a}" y="-130" width="10" height="10" fill="${d}"/>`).join("")}<rect x="-16" y="-40" width="32" height="40" fill="#3b2f2b"/>${dark?`<rect x="-6" y="-72" width="14" height="16" fill="#2a2220"/><g stroke="#8a7d78" stroke-width="2"><line x1="-2" y1="-72" x2="-2" y2="-56"/><line x1="3" y1="-72" x2="3" y2="-56"/></g>`:`<path d="M70 -120 V-150" stroke="${C.ink}" stroke-width="2"/><path d="M70 -150 l22 6 l-22 6Z" fill="#b35c44"/><path d="M-70 -120 V-150" stroke="${C.ink}" stroke-width="2"/><path d="M-70 -150 l22 6 l-22 6Z" fill="#b35c44"/>`}</g>`)}
+function jug(x,y){add(`<g transform="translate(${x} ${y})"><path d="M-12 0 Q-18 -18 -8 -28 V-34 H8 V-28 Q18 -18 12 0Z" fill="#b4704a"/><path d="M12 -24 q10 4 2 14" stroke="#b4704a" stroke-width="3" fill="none"/></g>`)}
+function book(x,y,s=1){add(`<g transform="translate(${x} ${y}) scale(${s})"><path d="M0 -4 Q-24 -12 -44 -6 V22 Q-24 16 0 24Z" fill="#f7f1e3" stroke="#6f9a5e" stroke-width="3"/><path d="M0 -4 Q24 -12 44 -6 V22 Q24 16 0 24Z" fill="#f7f1e3" stroke="#6f9a5e" stroke-width="3"/>${[0,1,2].map(i=>`<path d="M-36 ${4+i*6} H-8 M8 ${4+i*6} H36" stroke="#8a8170" stroke-width="1.5"/>`).join("")}</g>`)}
+function notebook(x,y){add(`<g transform="translate(${x} ${y})"><rect x="-70" y="-50" width="140" height="96" rx="4" fill="#b35c44"/><rect x="-64" y="-46" width="62" height="88" fill="#fbf6ea"/><rect x="2" y="-46" width="62" height="88" fill="#fbf6ea"/>${Array.from({length:7},(_,i)=>`<line x1="-58" y1="${-34+i*11}" x2="-10" y2="${-34+i*11}" stroke="#7a8b9a" stroke-width="1.5"/><line x1="10" y1="${-34+i*11}" x2="58" y2="${-34+i*11}" stroke="#7a8b9a" stroke-width="1.5"/><circle cx="52" cy="${-36+i*11}" r="2" fill="#2e7d4f"/>`).join("")}</g>`)}
+function scale(x,y,s=1){add(`<g transform="translate(${x} ${y}) scale(${s})"><rect x="-4" y="-90" width="8" height="90" fill="#9a7a3a"/><rect x="-26" y="-6" width="52" height="8" rx="3" fill="#9a7a3a"/><line x1="-56" y1="-86" x2="56" y2="-86" stroke="#9a7a3a" stroke-width="5" stroke-linecap="round"/><circle cx="0" cy="-90" r="7" fill="#c49a3e"/>${[-56,56].map(a=>`<line x1="${a}" y1="-86" x2="${a-16}" y2="-50" stroke="#9a7a3a" stroke-width="1.5"/><line x1="${a}" y1="-86" x2="${a+16}" y2="-50" stroke="#9a7a3a" stroke-width="1.5"/><path d="M${a-22} -50 H${a+22} Q${a} -36 ${a-22} -50Z" fill="#c49a3e"/>`).join("")}</g>`)}
+function boxes(x,y){add(`<g transform="translate(${x} ${y})"><rect x="-26" y="-24" width="26" height="24" fill="#c8a067" stroke="#9a7a4a" stroke-width="2"/><rect x="2" y="-24" width="26" height="24" fill="#c8a067" stroke="#9a7a4a" stroke-width="2"/><rect x="-12" y="-48" width="26" height="24" fill="#d6b07a" stroke="#9a7a4a" stroke-width="2"/></g>`)}
+function skyGates(){for(let i=0;i<5;i++){const x=40+i*72;add(`<g opacity=".85"><path d="M${x} 150 V80 Q${x+24} 50 ${x+48} 80 V150Z" fill="#fff6d8"/><path d="M${x+6} 150 V84 Q${x+24} 60 ${x+42} 84 V150Z" fill="#ffe9a8" opacity=".7"/></g>`)}}
+function heavens(){for(let i=7;i>=1;i--)add(`<path d="M${200-i*28} 250 A${i*28} ${i*26} 0 0 1 ${200+i*28} 250" fill="none" stroke="#ffffff" stroke-width="2.5" opacity="${.25+i*.07}"/>`)}
+function bubble(x,y,t,dir=1){add(`<g transform="translate(${x} ${y})"><path d="M-22 -18 h44 a10 10 0 0 1 10 10 v14 a10 10 0 0 1 -10 10 h-${dir>0?28:8} l-8 10 l2 -10 h-${dir>0?8:28} a10 10 0 0 1 -10 -10 v-14 a10 10 0 0 1 10 -10Z" fill="#fff" stroke="#d6cfc2" stroke-width="1.5"/><text x="0" y="6" text-anchor="middle" font-family="Georgia,serif" font-size="20" font-weight="700" fill="${C.ink}">${t}</text></g>`)}
+function zzz(x,y){add(`<text x="${x}" y="${y}" font-family="Georgia,serif" font-size="16" font-weight="700" fill="#7b8a94">z z z</text>`)}
+// Figur ohne Gesicht: o={c, kid, f(Kopftuch), old(Stock), crown, cap, arm:'up'|'point'|'book'|'hammer'|'carry', dir:1|-1, lie}
+function person(x,y,s=1,o={}){
+  const c=o.c||robes[0], d=o.dir||1, k=o.kid?0.72:1, sc=s*k;
+  if(o.lie){add(`<g transform="translate(${x} ${y}) scale(${s})"><rect x="-34" y="-14" width="58" height="14" rx="7" fill="${c}"/><circle cx="34" cy="-9" r="10" fill="${C.skin}"/><rect x="-40" y="-4" width="86" height="6" rx="3" fill="#cdb48c"/></g>`);return}
+  let g=`<g transform="translate(${x} ${y}) scale(${sc})">`;
+  if(o.old)g+=`<line x1="${22*d}" y1="-58" x2="${26*d}" y2="0" stroke="#6d4c33" stroke-width="4" stroke-linecap="round"/>`;
+  g+=`<path d="M-17 0 L-12 -58 Q0 -66 12 -58 L17 0Z" fill="${c}"/>`;
+  g+=`<path d="M-12 -58 Q0 -66 12 -58 L10 -48 Q0 -52 -10 -48Z" fill="#000" opacity=".1"/>`;
+  const sh=[8*d,-54];
+  if(o.arm==="up")g+=`<path d="M${sh[0]} ${sh[1]} L${22*d} -84" stroke="${c}" stroke-width="7" stroke-linecap="round"/><circle cx="${22*d}" cy="-86" r="4.5" fill="${C.skin}"/>`;
+  else if(o.arm==="point")g+=`<path d="M${sh[0]} ${sh[1]} L${32*d} -66" stroke="${c}" stroke-width="7" stroke-linecap="round"/><circle cx="${34*d}" cy="-67" r="4.5" fill="${C.skin}"/>`;
+  else if(o.arm==="book")g+=`<path d="M-9 -52 L-6 -38 M9 -52 L6 -38" stroke="${c}" stroke-width="7" stroke-linecap="round"/><path d="M0 -40 Q-10 -44 -18 -41 V-30 Q-10 -33 0 -29 Q10 -33 18 -30 V-41 Q10 -44 0 -40Z" fill="#f7f1e3" stroke="#6f9a5e" stroke-width="2"/>`;
+  else if(o.arm==="hammer")g+=`<path d="M${sh[0]} ${sh[1]} L${26*d} -40" stroke="${c}" stroke-width="7" stroke-linecap="round"/><line x1="${26*d}" y1="-40" x2="${34*d}" y2="-26" stroke="#6d4c33" stroke-width="3"/><rect x="${34*d-6}" y="-30" width="12" height="7" fill="#777"/>`;
+  else if(o.arm==="carry")g+=`<path d="M-9 -52 L-14 -70 M9 -52 L14 -70" stroke="${c}" stroke-width="7" stroke-linecap="round"/><rect x="-18" y="-96" width="36" height="26" fill="#c8a067" stroke="#9a7a4a" stroke-width="2"/>`;
+  else if(o.arm==="write")g+=`<path d="M${sh[0]} ${sh[1]} L${30*d} -72" stroke="${c}" stroke-width="7" stroke-linecap="round"/><line x1="${30*d}" y1="-72" x2="${36*d}" y2="-80" stroke="#2f2a26" stroke-width="2"/>`;
+  else g+=`<path d="M${-8*d} -54 L${-14*d} -26 M${8*d} -54 L${14*d} -26" stroke="${c}" stroke-width="7" stroke-linecap="round" opacity=".9"/>`;
+  if(o.f)g+=`<path d="M-15 -64 Q-17 -92 0 -94 Q17 -92 15 -64 Q0 -56 -15 -64Z" fill="${o.f}"/><circle cx="0" cy="-76" r="10" fill="${C.skin}"/>`;
+  else g+=`<circle cx="0" cy="-74" r="12" fill="${o.old?C.skin2:C.skin}"/>`;
+  if(o.old)g+=`<path d="M-12 -76 Q0 -92 12 -76 Q0 -82 -12 -76Z" fill="#e8e4dc"/>`;
+  if(o.cap)g+=`<path d="M-12 -78 Q0 -92 12 -78Z" fill="${o.cap}"/>`;
+  if(o.crown)g+=`<path d="M-12 -82 L-12 -96 L-6 -88 L0 -98 L6 -88 L12 -96 L12 -82Z" fill="#e8b631" stroke="#b8862a" stroke-width="1"/>`;
+  g+=`</g>`; add(g);
+}
+const F={sky,indoor,ground,sun,moon,mountains,dunes,tent,peg,house,lamp,cloud,rain,well,sprouts,rows,tree,stall,bus,school,bell,board,writtenWall,lake,shimmer,castle,jug,book,notebook,scale,boxes,skyGates,heavens,bubble,zzz,person};
+return function(spec){out="";uid++;spec.forEach(([fn,...a])=>F[fn](...a));return `<svg viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">${out}</svg>`;};
+})();
+
+// Figuren der Geschichten
+const P={
+ vater:{c:"#5b7fa6",cap:"#f2efe6"}, junge:{c:"#c79a3d",kid:1},
+ opa:{c:"#7b8a94",old:1}, ahmad:{c:"#4f8f8f",kid:1}, schwester:{c:"#b35c44",kid:1,f:"#8a6aa3"},
+ bauer:{c:"#6f9a5e",cap:"#d9c9a6"}, sohn:{c:"#c79a3d",kid:1},
+ lehrer:{c:"#5b7fa6",cap:"#f2efe6"}, king:{c:"#8a3e4a",crown:1},
+ weiser:{c:"#a0674f",old:1}, haendler:{c:"#4f8f8f",cap:"#e9dcc3"}, hsohn:{c:"#8a6aa3"}
+};
+const o=(b,x)=>Object.assign({},b,x||{});
+const crowd=(xs,y,s=1)=>xs.map((x,i)=>["person",x,y,s,{c:["#5b7fa6","#b35c44","#6f9a5e","#c79a3d","#8a6aa3","#7b8a94"][i%6],f:i%3===1?"#4f6d8a":undefined,dir:i%2?-1:1}]);
+
+const SCENES=[
+// 1–5 Markt
+[
+ [["sky","day"],["sun",340,40],["ground","sand",185],["stall",80,190,"#b35c44"],["stall",320,190,"#5b7fa6"],...crowd([150,185,220,255],205),["bubble",170,92,"?"],["bubble",240,92,"?",-1]],
+ [["sky","day"],["ground","sand",185],["stall",330,190,"#6f9a5e"],["person",160,215,1,o(P.vater,{dir:1})],["person",215,215,1,o(P.junge,{dir:-1,arm:"up"})],["bubble",230,110,"?",-1]],
+ [["sky","day"],["ground","sand",185],["stall",70,190,"#c79a3d"],...crowd([300,335,365],200,.8),["person",170,215,1,o(P.vater,{arm:"point",dir:1})],["person",130,215,1,o(P.junge,{dir:1})],["bubble",205,100,"!"]],
+ [["sky","day"],["ground","sand",185],...crowd([70,105,140],210),...crowd([260,295,330],210).map(e=>(e[4]=Object.assign({},e[4],{dir:-1}),e)),["bubble",105,100,"!"],["bubble",295,100,"?",-1]],
+ [["sky","day"],["ground","sand",185],...crowd([70,105,140],210),...crowd([260,295,330],210).map(e=>(e[4]=Object.assign({},e[4],{dir:-1}),e)),["bubble",105,100,"✓"],["bubble",295,100,"✗",-1]],
+ [["sky","day"],["ground","sand",185],["stall",330,190,"#8a6aa3"],["person",170,215,1,o(P.vater,{arm:"up"})],["person",225,215,1,o(P.junge,{dir:-1})],["bubble",150,100,"!"]],
+ [["sky","dusk"],["sun",80,170,24],["ground","sand",190],["house",320,200,.9],["person",190,218,1,o(P.vater,{dir:1})],["person",235,218,1,o(P.junge,{dir:1})],["bubble",170,108,"!"]]
+],
+// 6–11 Wüste
+[
+ [["sky","day"],["sun",60,45],["mountains",170,190,1],["dunes"],["ground","sand",195],["person",120,222,1,o(P.opa,{dir:1})],["person",160,222,1,P.ahmad],["person",190,222,1,P.schwester]],
+ [["sky","day"],["sun",50,40],["mountains",160,188,1.05],["ground","sand",192],["person",90,222,1,o(P.opa,{arm:"point",dir:1})],["person",50,222,1,P.ahmad]],
+ [["sky","day"],["mountains",-30,180,.7,.8],["ground","sand",188],["tent",240,205,1],["person",130,224,1,o(P.ahmad,{arm:"hammer",dir:1})],["bubble",110,128,"!"]],
+ [["sky","night"],["moon",330,45],["ground","sand",190],["tent",220,205,1],["person",90,224,1,o(P.opa,{arm:"up"})],["person",130,224,1,P.ahmad],["person",355,224,1,o(P.schwester,{dir:-1})]],
+ [["sky","dusk"],["sun",350,180,18],["ground","sand",190],["tent",120,205,.9],["person",230,212,1.1,o(P.ahmad,{lie:1})],["person",300,226,1,o(P.schwester,{lie:1})]],
+ [["sky","night"],["moon",60,45],["ground","sand",190],["lamp",250,205,1],["person",190,224,1,o(P.opa,{arm:"book"})],["person",300,224,1,o(P.ahmad,{dir:-1})]],
+ [["sky","night"],["moon",340,45],["ground","sand",190],["lamp",110,205,.9],["person",200,224,1,o(P.opa,{arm:"book"})],["person",150,224,1,P.ahmad],["person",255,224,1,o(P.schwester,{dir:-1})]],
+ [["sky","day"],["ground","sand",190],["tent",320,205,.8],["person",120,224,1,o(P.opa,{dir:1})],["person",175,224,1,o(P.schwester,{dir:-1,arm:"up"})],["bubble",185,120,"?",-1],["bubble",110,106,"♡"]]
+],
+// 12–16 Bauer
+[
+ [["sky","day"],["sun",340,45],["ground","grass",190],["house",90,195,1],["house",300,192,.8],["person",180,222,1,P.bauer],["person",215,222,1,P.sohn],["person",240,222,1,o(P.sohn,{c:"#b35c44"})]],
+ [["sky","day"],["heavens"],["ground","grass",200],["person",160,228,1,o(P.bauer,{arm:"up"})],["person",205,228,1,P.sohn]],
+ [["sky","day"],["ground","grass",190],["house",250,198,.8],["person",150,222,1,o(P.sohn,{arm:"point",dir:1})],["bubble",130,140,"!"]],
+ [["sky","night"],["moon",60,40],["ground","grass",190],["house",210,200,1.4,true],["person",320,224,1,o(P.sohn,{dir:-1})]],
+ [["sky","day"],["sun",300,70,32,true],["ground","grass",190],["house",80,198,.8],["person",170,224,1,o(P.bauer,{arm:"point",dir:1})],["person",130,224,1,P.sohn]],
+ [["sky","storm"],["cloud",40,50,1.4,true],["cloud",170,40,1.6,true],["cloud",290,55,1.4,true],["rain",30,390,80,190],["ground","grass",195],["rows",40,360,212]],
+ [["sky","day"],["ground","grass",185],["well",80,215],["rows",180,380,204],["sprouts",190,380,204],["person",140,225,1,o(P.sohn,{arm:"point",dir:1})],["person",270,236,1,o(P.bauer,{dir:-1})]],
+ [["sky","day"],["sun",350,40],["ground","grass",185],["tree",60,205,1],["tree",140,198,.85],["tree",330,205,1.05],["sprouts",180,300,215,true],["tree",250,195,.7]]
+],
+// 17–21 Schule
+[
+ [["sky","day"],["sun",60,40],["ground","grass",195],["school",230,205],["person",80,226,1,o(P.ahmad,{c:"#5b7fa6"})],["person",110,226,1,o(P.schwester,{})],["person",350,226,1,o(P.ahmad,{c:"#c79a3d",dir:-1})]],
+ [["indoor"],["board",40,50,4],["bell",300,80],["person",210,214,1,o(P.lehrer,{arm:"point",dir:1})],...crowd([300,335,370],230,.7)],
+ [["sky","day"],["mountains",160,170,.9],["ground","road",175],["bus",150,218,1.1]],
+ [["sky","day"],["sun",340,40],["dunes"],["ground","road",180],["lake",290,170,130],["shimmer",220,360,156],["bus",110,222,1]],
+ [["sky","day"],["ground","grass",195],["school",200,205,true],...crowd([70,100,130],228,.85),...crowd([280,310,340],228,.85).map(e=>(e[4]=Object.assign({},e[4],{dir:-1}),e))],
+ [["indoor"],["board",210,50,4,150],["person",160,214,1,o(P.lehrer,{arm:"up",dir:1})],["bubble",120,100,"!"],...crowd([40,75],230,.7)],
+ [["sky","dusk"],["skyGates"],["cloud",20,190,1.2],["cloud",300,195,1.2]],
+ [["sky","dusk"],["mountains",80,200,1.2,.35],["shimmer",60,340,190],["ground","sand",205]],
+ [["indoor"],["board",30,50,4],["person",230,214,1,o(P.lehrer,{arm:"up",dir:-1})],["bubble",270,100,"!",-1],...crowd([320,355],230,.7)]
+],
+// 22–26 König
+[
+ [["sky","day"],["ground","stone",195],["castle",230,200,false],["person",90,228,1.1,o(P.king,{dir:1})]],
+ [["sky","dusk"],["ground","stone",195],["castle",200,200,false],...crowd([60,95,305,340],228,.85).map(e=>(e[4]=Object.assign({},e[4],{c:"#4a3b3a",dir:e[1]<200?1:-1}),e))],
+ [["sky","dark"],["ground","dark",195],["castle",200,200,true]],
+ [["sky","day"],["sun",330,50,30,true],["ground","sand",195],["castle",130,205,true],["jug",300,212]],
+ [["sky","day"],["ground","stone",195],["castle",300,195,false],["person",120,226,1,o(P.weiser,{dir:1,arm:"point"})],...crowd([180,210],228,.8).map(e=>(e[4]=Object.assign({},e[4],{dir:-1}),e))],
+ [["sky","dusk"],["ground","stone",195],["person",170,226,1,o(P.weiser,{arm:"up"})],["bubble",140,110,"!"]],
+ [["sky","dusk"],["ground","stone",195],["scale",250,210,1.1],["person",110,226,1,o(P.weiser,{dir:1,arm:"point"})]]
+],
+// 27–30 Händler
+[
+ [["sky","day"],["ground","sand",190],["stall",270,196,"#4f8f8f"],["person",270,228,.9,P.haendler],["person",90,215,1,{c:"#c79a3d",lie:1}],["person",160,226,1,{c:"#6f9a5e",lie:1}]],
+ [["sky","day"],["sun",340,40],["ground","sand",190],["person",130,215,1,{c:"#c79a3d",lie:1}],["person",240,226,1,{c:"#6f9a5e",lie:1}],["zzz",160,180],["zzz",270,192]],
+ [["indoor"],["writtenWall",160,40],["person",120,214,1,o(P.haendler,{arm:"write",dir:1})]],
+ [["indoor"],["writtenWall",20,40],["person",230,214,1,o(P.haendler,{arm:"point",dir:-1})],["person",275,214,1,o(P.hsohn,{dir:-1})],["person",345,218,.9,{c:"#c79a3d",dir:1}],["bubble",200,110,"!",-1]],
+ [["indoor"],["notebook",250,130],["person",120,214,1,o(P.haendler,{arm:"point",dir:1})]],
+ [["sky","day"],["ground","sand",190],["boxes",330,212],["person",150,226,1,{c:"#c79a3d",arm:"carry"}],["person",220,226,1,{c:"#6f9a5e",arm:"carry"}],["person",80,226,1,o(P.haendler,{arm:"point",dir:1})]],
+ [["sky","dusk"],["ground","sand",195],["scale",270,212,1],["person",130,226,1,o(P.hsohn,{arm:"up"})],["bubble",110,112,"!"]]
+]
+];
+
+const ar=n=>String(n).replace(/\d/g,d=>"٠١٢٣٤٥٦٧٨٩"[d]);
+function word(tok){
+  if(!tok.includes("=")){const p=document.createElement("span");p.className="p";p.textContent=tok;return p;}
+  let [a,d,t]=tok.split("=");const mark=t.startsWith("*");if(mark)t=t.slice(1);
+  const w=document.createElement("div");w.className="w "+t+(mark?" mark":"");
+  const sa=document.createElement("span");sa.className="a";sa.textContent=a;
+  const sd=document.createElement("span");sd.className="d";sd.textContent=d;w.append(sa,sd);return w;
+}
+function row(str){const r=document.createElement("div");r.className="row";str.split("|").forEach(t=>r.appendChild(word(t)));return r;}
+function ayatPage(bi){
+  const b=BLOCKS[bi],pg=document.createElement("article");pg.className="page ayatpage";
+  const t=document.createElement("div");t.className="text";
+  const h=document.createElement("h2");h.textContent="Die Ayat "+b.from+" bis "+b.to+" · Geschichte: "+b.title;t.appendChild(h);
+  for(let k=b.from;k<=b.to;k++){const r=row(AYAT[k]);const n=document.createElement("span");n.className="num";n.textContent="﴿"+ar(k)+"﴾";r.appendChild(n);t.appendChild(r);}
+  pg.appendChild(t);return pg;
+}
+function storyPage(bi,si){
+  const [s,tr]=BLOCKS[bi].story[si],pg=document.createElement("article");pg.className="page";
+  const pic=document.createElement("div");pic.className="pic";pic.innerHTML=ART(SCENES[bi][si]);pg.appendChild(pic);
+  const t=document.createElement("div");t.className="text";t.appendChild(row(s));
+  const p=document.createElement("p");p.className="tr";p.textContent=tr;t.appendChild(p);pg.appendChild(t);return pg;
+}
+
+// ---------- Mini-Spiele ----------
+const TYPN={v:"Verb",n:"Nomen",h:"Partikel",e:"Name"};
+const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;};
+const parseTok=t=>{const [a,d,ty]=t.split("=");return {a,d,t:ty.replace("*","")};};
+function pool(bi){
+  const b=BLOCKS[bi],seen=new Map();
+  for(let k=b.from;k<=b.to;k++)AYAT[k].split("|").forEach(t=>{const w=parseTok(t);if(!seen.has(w.a))seen.set(w.a,w);});
+  return [...seen.values()];
+}
+function allWords(){const m=new Map();Object.values(AYAT).forEach(l=>l.split("|").forEach(t=>{const w=parseTok(t);if(!m.has(w.a))m.set(w.a,w);}));return [...m.values()];}
+function distract(right,src,key,n){
+  const out=[],used=new Set([right[key]]);
+  for(const w of shuf(src))if(!used.has(w[key])){used.add(w[key]);out.push(w);if(out.length===n)break;}
+  if(out.length<n)for(const w of shuf(allWords()))if(!used.has(w[key])){used.add(w[key]);out.push(w);if(out.length===n)break;}
+  return out;
+}
+const el=(tag,cls,txt)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e;};
+function endScreen(area,msg,again){
+  area.innerHTML="";const box=el("div","endbox");box.append(el("div","big","Geschafft!"),el("div","",msg));
+  const b=el("button","","Nochmal spielen");b.type="button";b.addEventListener("click",again);box.appendChild(b);area.appendChild(box);
+}
+function header(area,done,total,label){
+  const top=el("div","gtop");top.append(el("span","",label),el("span","",done+" / "+total));
+  const bar=el("div","bar"),i=el("i");i.style.width=(100*done/total)+"%";bar.appendChild(i);area.append(top,bar);
+}
+// 1) Bedeutung: Arabisch -> Deutsch oder Deutsch -> Arabisch. Falsche Wörter kommen am Ende nochmal.
+function gameMeaning(area,bi){
+  const P=pool(bi);let queue=shuf(shuf(P).sort((x,y)=>weak(y)-weak(x)).slice(0,Math.min(10,P.length))),total=queue.length,done=0,errors=0;
+  function next(){
+    if(!queue.length){recordGame(bi,"Bedeutung",errors);return endScreen(area,errors?errors+" Fehler, alle Wörter am Ende richtig.":"Ohne Fehler!",()=>gameMeaning(area,bi));}
+    area.innerHTML="";header(area,done,total,"Was bedeutet das Wort?");
+    const w=queue.shift(),rev=Math.random()<.4,pr=el("div","prompt");
+    if(rev){pr.append(el("div","de",w.d),el("div","hint","Welches arabische Wort ist das?"));}
+    else{const a=el("div","big",w.a);a.style.color=`var(--${{v:"verb",n:"noun",h:"harf",e:"black"}[w.t]})`;pr.appendChild(a);}
+    area.appendChild(pr);
+    const opts=el("div","opts"),fb=el("div","feedback");
+    shuf([w,...distract(w,P,rev?"a":"d",3)]).forEach(o=>{
+      const b=el("button","opt"+(rev?" arx":""),rev?o.a:o.d);b.type="button";
+      b.addEventListener("click",()=>{
+        if(opts.dataset.locked)return;opts.dataset.locked=1;
+        recordWord(w.a,o===w);if(o===w){b.classList.add("right");fb.className="feedback ok";fb.textContent="Richtig!";done++;}
+        else{b.classList.add("wrong");errors++;queue.push(w);fb.className="feedback no";fb.textContent="Richtig wäre: "+(rev?w.a:w.d);
+          [...opts.children].forEach(c=>{if(c.textContent===(rev?w.a:w.d))c.classList.add("right");});}
+        setTimeout(next,o===w?700:1600);
+      });opts.appendChild(b);});
+    area.append(opts,fb);
+  }
+  next();
+}
+// 2) Paare finden
+function gamePairs(area,bi){
+  const P=shuf(pool(bi)),rounds=[];for(let i=0;i<P.length;i+=5)rounds.push(P.slice(i,i+5));
+  if(rounds.length>1&&rounds[rounds.length-1].length<3){const last=rounds.pop();rounds[rounds.length-1].push(...last);}
+  let r=0,errors=0;
+  function round(){
+    if(r>=rounds.length){recordGame(bi,"Paare finden",errors);return endScreen(area,errors?errors+" Fehlversuche.":"Ohne Fehler!",()=>gamePairs(area,bi));}
+    area.innerHTML="";header(area,r,rounds.length,"Finde die Paare");
+    const set=rounds[r],grid=el("div","pairs"),L=el("div","col"),R=el("div","col");let selA=null,selD=null,left=set.length;
+    const check=()=>{if(!selA||!selD)return;
+      recordWord(selA.dataset.k,selA.dataset.k===selD.dataset.k);if(selA.dataset.k===selD.dataset.k){[selA,selD].forEach(x=>{x.classList.remove("sel");x.classList.add("right","done");x.disabled=true;});left--;selA=selD=null;if(!left){r++;setTimeout(round,600);}}
+      else{errors++;const a=selA,d=selD;[a,d].forEach(x=>{x.classList.add("wrong","shake");});selA=selD=null;setTimeout(()=>[a,d].forEach(x=>x.classList.remove("wrong","shake","sel")),500);}};
+    shuf(set).forEach(w=>{const b=el("button","opt arx",w.a);b.type="button";b.dataset.k=w.a;b.addEventListener("click",()=>{if(b.disabled)return;if(selA)selA.classList.remove("sel");selA=b;b.classList.add("sel");check();});L.appendChild(b);});
+    shuf(set).forEach(w=>{const b=el("button","opt",w.d);b.type="button";b.dataset.k=w.a;b.addEventListener("click",()=>{if(b.disabled)return;if(selD)selD.classList.remove("sel");selD=b;b.classList.add("sel");check();});R.appendChild(b);});
+    grid.append(L,R);area.appendChild(grid);
+  }
+  round();
+}
+// 3) Welche Farbe? (Wortart)
+function gameColor(area,bi){
+  const P=shuf(pool(bi)).slice(0,10);let i=0,errors=0;
+  const why={v:"Es ist ein Verb, also rot.",n:"Es ist ein Ism (Nomen, Adjektiv oder Pronomen), also blau.",h:"Es ist eine Partikel, also grün.",e:"Es ist ein Eigenname, also schwarz."};
+  function next(){
+    if(i>=P.length){recordGame(bi,"Welche Farbe?",errors);return endScreen(area,errors?errors+" Fehler.":"Ohne Fehler!",()=>gameColor(area,bi));}
+    area.innerHTML="";header(area,i,P.length,"Welche Farbe bekommt das Wort?");
+    const w=P[i],pr=el("div","prompt");pr.append(el("div","big",w.a),el("div","hint",w.d));area.appendChild(pr);
+    const opts=el("div","opts"),fb=el("div","feedback");
+    [["v","Rot · Verb"],["n","Blau · Nomen"],["h","Grün · Partikel"],["e","Schwarz · Name"]].forEach(([t,l])=>{
+      const b=el("button","opt c"+t,l);b.type="button";
+      b.addEventListener("click",()=>{if(opts.dataset.locked)return;opts.dataset.locked=1;
+        const ok=t===w.t;b.classList.add(ok?"right":"wrong");if(!ok){errors++;[...opts.children].forEach(c=>{if(c.classList.contains("c"+w.t))c.classList.add("right");});}
+        fb.className="feedback "+(ok?"ok":"no");fb.textContent=(ok?"Richtig! ":"")+why[w.t];i++;setTimeout(next,ok?900:2000);});
+      opts.appendChild(b);});
+    area.append(opts,fb);
+  }
+  next();
+}
+// 4) Lücke in der Aya
+function gameGap(area,bi){
+  const b=BLOCKS[bi],P=pool(bi);let items=[];
+  for(let k=b.from;k<=b.to;k++){const toks=AYAT[k].split("|");shuf(toks.map((_,j)=>j)).slice(0,Math.min(2,toks.length)).forEach(j=>items.push([k,j]));}
+  items=shuf(items).slice(0,8);let i=0,errors=0;
+  function next(){
+    if(i>=items.length){recordGame(bi,"Lücke in der Aya",errors);return endScreen(area,errors?errors+" Fehler.":"Ohne Fehler!",()=>gameGap(area,bi));}
+    area.innerHTML="";header(area,i,items.length,"Welches Wort fehlt in der Aya?");
+    const [k,j]=items[i],toks=AYAT[k].split("|"),right=parseTok(toks[j]);
+    const r=el("div","row gaprow");
+    toks.forEach((t,x)=>{if(x===j){const w=el("div","w");const a=el("span","a");a.appendChild(el("span","gap"," "));w.append(a,el("span","d",right.d));r.appendChild(w);}else r.appendChild(word(t));});
+    const n=el("span","num","﴿"+ar(k)+"﴾");r.appendChild(n);area.appendChild(r);
+    const opts=el("div","opts"),fb=el("div","feedback");
+    shuf([right,...distract(right,P,"a",3)]).forEach(o=>{const bt=el("button","opt arx",o.a);bt.type="button";
+      bt.addEventListener("click",()=>{if(opts.dataset.locked)return;opts.dataset.locked=1;const ok=o.a===right.a;recordWord(right.a,ok);
+        bt.classList.add(ok?"right":"wrong");if(!ok){errors++;[...opts.children].forEach(c=>{if(c.textContent===right.a)c.classList.add("right");});}
+        fb.className="feedback "+(ok?"ok":"no");fb.textContent=ok?"Richtig!":"Richtig wäre: "+right.a;i++;setTimeout(next,ok?800:1700);});
+      opts.appendChild(bt);});
+    area.append(opts,fb);
+  }
+  next();
+}
+const GAMES=[["Bedeutung",gameMeaning],["Paare finden",gamePairs],["Welche Farbe?",gameColor],["Lücke in der Aya",gameGap]];
+function gamesPage(bi){
+  const pg=el("article","page"),g=el("div","games");
+  g.appendChild(el("h2","","Spiele · Wörter aus den Ayat "+BLOCKS[bi].from+" bis "+BLOCKS[bi].to));
+  const tabs=el("div","gtabs"),area=el("div","garea");
+  GAMES.forEach(([name,fn],i)=>{const b=el("button","",name);const r=(blk(bi).games||{})[name];if(r)b.appendChild(el("span","best","· "+(r.best?r.best+" F":"✓")));b.type="button";b.addEventListener("click",()=>{[...tabs.children].forEach((t,k)=>t.setAttribute("aria-pressed",k===i?"true":"false"));fn(area,bi);});tabs.appendChild(b);});
+  g.append(tabs,area);pg.appendChild(g);
+  tabs.children[0].setAttribute("aria-pressed","true");gameMeaning(area,bi);return pg;
+}
+
+// ---------- Fortschritt: lokal, nach Google-Login in Firestore users/{uid}/entries ----------
+const PROG={pos:null,blocks:{},words:{}};
+const LS={get:(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let cloud=null;
+function loadLocalProg(){const p=LS.get("naba-prog",null);if(p){PROG.pos=p.pos||null;PROG.blocks=p.blocks||{};PROG.words=p.words||{};}}
+let saveT=null,dirty=new Set();
+function markDirty(k){dirty.add(k);clearTimeout(saveT);saveT=setTimeout(flush,800);}
+function flush(){
+  LS.set("naba-prog",PROG);
+  if(cloud){const ks=[...dirty];dirty.clear();ks.forEach(k=>{
+    const data=k==="pos"?{kind:"pos",pos:PROG.pos}:k==="words"?{kind:"words",words:PROG.words}:{kind:"block",block:+k.slice(6),...PROG.blocks[k.slice(6)]};
+    cloud.set(k,data).catch(()=>setSync("Speichern fehlgeschlagen, versuche es später"));});}
+  else dirty.clear();
+}
+function blk(i){return PROG.blocks[i]||(PROG.blocks[i]={read:0,games:{}});}
+function recordPos(c,p){PROG.pos=[c,p];const b=blk(c);if(p>b.read)b.read=p;markDirty("pos");markDirty("block-"+c);}
+function recordGame(bi,name,errors){const g=blk(bi).games,o=g[name];g[name]={best:o?Math.min(o.best,errors):errors,plays:(o?o.plays:0)+1};markDirty("block-"+bi);paintProgress();}
+function recordWord(a,ok){const w=PROG.words[a]||(PROG.words[a]={r:0,w:0});ok?w.r++:w.w++;markDirty("words");}
+const weak=w=>{const s=PROG.words[w.a];return s?s.w-s.r*.5:0;};
+function setSync(t){const e=document.getElementById("sync");if(e)e.textContent=t;}
+const FB_V="12.18.0";
+async function initCloud(){
+  let cfg=null;try{cfg=(await import("./firebase-config.js")).firebaseConfig}catch(e){}
+  if(!cfg||!cfg.apiKey||String(cfg.apiKey).startsWith("PASTE")){setSync(location.protocol==="file:"||!cfg?"Nur auf diesem Gerät gespeichert":"Firebase noch nicht eingerichtet");return;}
+  try{
+    const app=await import(`https://www.gstatic.com/firebasejs/${FB_V}/firebase-app.js`);
+    const auth=await import(`https://www.gstatic.com/firebasejs/${FB_V}/firebase-auth.js`);
+    const fs=await import(`https://www.gstatic.com/firebasejs/${FB_V}/firebase-firestore.js`);
+    const a=app.initializeApp(cfg),db=fs.initializeFirestore(a,{localCache:fs.persistentLocalCache()}),au=auth.getAuth(a);
+    const btn=document.getElementById("authBtn");btn.hidden=false;
+    btn.onclick=async()=>{if(cloud){await auth.signOut(au);return;}const prov=new auth.GoogleAuthProvider();
+      try{await auth.signInWithPopup(au,prov)}catch(e){if(e&&e.code==="auth/popup-blocked")auth.signInWithRedirect(au,prov);else setSync("Anmeldung fehlgeschlagen, versuche es nochmal");}};
+    auth.getRedirectResult(au).catch(()=>{});
+    auth.onAuthStateChanged(au,async user=>{
+      if(!user){cloud=null;btn.textContent="Mit Google anmelden";setSync("Nur auf diesem Gerät gespeichert");return;}
+      btn.textContent="Abmelden";setSync("Wird geladen…");
+      const ref=fs.collection(db,"users",user.uid,"entries");
+      cloud={set:(id,data)=>fs.setDoc(fs.doc(ref,id),JSON.parse(JSON.stringify(data)))};
+      try{
+        const snap=await fs.getDocs(ref);
+        if(snap.empty){dirty=new Set(["pos","words",...Object.keys(PROG.blocks).map(i=>"block-"+i)]);flush();}
+        else{snap.forEach(d=>{const v=d.data();
+          if(v.kind==="pos")PROG.pos=v.pos;
+          if(v.kind==="words")PROG.words=Object.assign({},PROG.words,v.words||{});
+          if(v.kind==="block"){const l=PROG.blocks[v.block]||{read:0,games:{}};const g=Object.assign({},l.games);
+            Object.entries(v.games||{}).forEach(([n,x])=>{g[n]=g[n]?{best:Math.min(g[n].best,x.best),plays:Math.max(g[n].plays,x.plays)}:x;});
+            PROG.blocks[v.block]={read:Math.max(l.read||0,v.read||0),games:g};}});
+          LS.set("naba-prog",PROG);
+          if(PROG.pos&&BLOCKS[PROG.pos[0]]){cur=PROG.pos[0];page=Math.min(PROG.pos[1]|0,BLOCKS[cur].story.length+1);}
+          render();}
+        setSync("● Gespeichert in deinem Google-Konto");
+      }catch(e){setSync("Cloud nicht erreichbar, gespeichert auf diesem Gerät");}
+    });
+  }catch(e){setSync("Cloud nicht erreichbar, gespeichert auf diesem Gerät");}
+}
+function paintProgress(){
+  [...document.getElementById("tabs").children].forEach((t,i)=>{const g=(PROG.blocks[i]||{}).games||{};const done=GAMES.every(([n])=>g[n]);
+    t.querySelector(".ck").textContent=done?"✓":"";});
+}
+let cur=0,page=0;
+const tabs=document.getElementById("tabs"),single=document.getElementById("single"),all=document.getElementById("all");
+const count=document.getElementById("count"),dots=document.getElementById("dots"),prev=document.getElementById("prev"),next=document.getElementById("next");
+BLOCKS.forEach((b,i)=>{const btn=document.createElement("button");btn.type="button";btn.textContent="Ayat "+b.from+"–"+b.to;const ck=document.createElement("span");ck.className="ck";btn.appendChild(ck);btn.addEventListener("click",()=>{cur=i;page=0;render();});tabs.appendChild(btn);});
+const total=()=>BLOCKS[cur].story.length+2;
+function render(){
+  [...tabs.children].forEach((t,k)=>t.setAttribute("aria-pressed",k===cur?"true":"false"));
+  single.innerHTML="";single.appendChild(page===0?ayatPage(cur):page===total()-1?gamesPage(cur):storyPage(cur,page-1));
+  count.textContent=page===0?"Ayat":page===total()-1?"Spiele":"Seite "+page+" von "+(total()-2);
+  prev.disabled=page===0&&cur===0;
+  next.textContent=page===total()-1?(cur<BLOCKS.length-1?"Nächster Block ›":"Ende"):"Weiter ›";
+  next.disabled=page===total()-1&&cur===BLOCKS.length-1;
+  dots.innerHTML="";for(let i=0;i<total();i++){const d=document.createElement("span");if(i===page)d.className="on";dots.appendChild(d);}
+  all.innerHTML="";all.appendChild(ayatPage(cur));BLOCKS[cur].story.forEach((_,i)=>all.appendChild(storyPage(cur,i)));all.appendChild(gamesPage(cur));
+  recordPos(cur,page);paintProgress();
+}
+function go(d){
+  page+=d;
+  if(page<0){if(cur>0){cur--;page=total()-1;}else page=0;}
+  if(page>=total()){if(cur<BLOCKS.length-1){cur++;page=0;}else page=total()-1;}
+  render();
+}
+prev.addEventListener("click",()=>go(-1));next.addEventListener("click",()=>go(1));
+document.addEventListener("keydown",e=>{if(document.body.classList.contains("allmode")||e.target.closest&&e.target.closest(".games"))return;if(e.key==="ArrowRight")go(1);if(e.key==="ArrowLeft")go(-1);});
+const tg=document.getElementById("toggle");
+tg.addEventListener("click",()=>{const on=document.body.classList.toggle("hide-de");tg.setAttribute("aria-pressed",on?"true":"false");tg.textContent=on?"Deutsch zeigen":"Deutsch verbergen";});
+const ab=document.getElementById("allbtn");
+ab.addEventListener("click",()=>{const on=document.body.classList.toggle("allmode");ab.setAttribute("aria-pressed",on?"true":"false");ab.textContent=on?"Seite für Seite":"Alle Seiten zeigen";});
+try{const s=JSON.parse(localStorage.getItem("naba-book"));if(Array.isArray(s)&&BLOCKS[s[0]]){cur=s[0];page=Math.min(s[1]|0,BLOCKS[cur].story.length+1);}}catch(e){}
+render();
+initCloud();
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
