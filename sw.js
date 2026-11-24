@@ -1,5 +1,5 @@
 /* An-Naba Bilderbuch service worker: offline app shell */
-const CACHE = 'naba-v1';
+const CACHE = 'naba-v2';
 const SHELL = ['./', './index.html', './firebase-config.js', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/favicon-48.png', './icons/apple-touch-icon.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

@@ -4,7 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>An-Naba Bilderbuch</title>
-<meta name="theme-color" content="#1d2321">
+<meta name="theme-color" content="#f6f7f4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#161918" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="An-Naba">
+<script>try{var t=localStorage.getItem("naba-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon-48.png" sizes="48x48">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -123,6 +129,13 @@ body:not(.allmode) #all{display:none}
 
 .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .sync{color:var(--muted);font-size:.88rem}
+.topbtns{display:flex;gap:6px;flex-wrap:wrap}
+.installhint{background:var(--paper);border:1px solid var(--rule);border-radius:8px;padding:12px 14px;font-size:.95rem;line-height:1.45}
+.installhint b{font-weight:700}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pic svg{filter:brightness(.82) saturate(.9)}:root:not([data-theme="light"]) .pic{background:#2a2e2c}}
+:root[data-theme="dark"] .pic svg{filter:brightness(.82) saturate(.9)}
+:root[data-theme="dark"] .pic{background:#2a2e2c}
+@media (display-mode: standalone){#installBtn{display:none!important}}
 .authbtn{font:inherit;font-weight:600;border:1px solid var(--rule);background:var(--paper);color:var(--fg);border-radius:999px;padding:6px 14px;cursor:pointer}
 .tabs button .ck{color:var(--ok);margin-inline-start:4px}
 .tabs button[aria-pressed="true"] .ck{color:inherit}
@@ -131,7 +144,8 @@ body:not(.allmode) #all{display:none}
 </head>
 <body>
 <div class="wrap">
-  <div class="topbar"><span id="sync" class="sync">Nur auf diesem Gerät gespeichert</span><button type="button" id="authBtn" class="authbtn" hidden>Mit Google anmelden</button></div>
+  <div class="topbar"><span id="sync" class="sync">Nur auf diesem Gerät gespeichert</span><div class="topbtns"><button type="button" id="installBtn" class="authbtn" hidden>App installieren</button><button type="button" id="themeBtn" class="authbtn" aria-label="Darstellung wechseln">◐ System</button><button type="button" id="authBtn" class="authbtn" hidden>Mit Google anmelden</button></div></div>
+  <div id="installHint" class="installhint" hidden></div>
   <header>
     <h1>سُورَةُ النَّبَإِ · مِنْ ١ إِلَى ٣٠</h1>
     <p>Ein Bilderbuch: zuerst die Ayat, dann eine kleine Geschichte, am Ende Spiele zum Üben.</p>
@@ -646,6 +660,37 @@ ab.addEventListener("click",()=>{const on=document.body.classList.toggle("allmod
 try{const s=JSON.parse(localStorage.getItem("naba-book"));if(Array.isArray(s)&&BLOCKS[s[0]]){cur=s[0];page=Math.min(s[1]|0,BLOCKS[cur].story.length+1);}}catch(e){}
 render();
 initCloud();
+// ---------- Darstellung (System / Hell / Dunkel) ----------
+(function(){
+  const btn=document.getElementById("themeBtn"),root=document.documentElement,order=["system","light","dark"],label={system:"◐ System",light:"☀ Hell",dark:"☾ Dunkel"};
+  let mode="system";try{mode=localStorage.getItem("naba-theme")||"system"}catch(e){}
+  function apply(){
+    if(mode==="system")root.removeAttribute("data-theme");else root.setAttribute("data-theme",mode);
+    btn.textContent=label[mode];btn.title="Darstellung: "+label[mode].slice(2);
+    const dark=mode==="dark"||(mode==="system"&&matchMedia("(prefers-color-scheme: dark)").matches);
+    document.querySelectorAll('meta[name="theme-color"]').forEach(m=>{m.setAttribute("content",dark?"#161918":"#f6f7f4");m.removeAttribute("media");});
+  }
+  btn.addEventListener("click",()=>{mode=order[(order.indexOf(mode)+1)%3];try{localStorage.setItem("naba-theme",mode)}catch(e){}apply();});
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{if(mode==="system")apply();});
+  apply();
+})();
+// ---------- App installieren ----------
+(function(){
+  const btn=document.getElementById("installBtn"),hint=document.getElementById("installHint");
+  const standalone=matchMedia("(display-mode: standalone)").matches||navigator.standalone;
+  if(standalone)return;
+  let deferred=null;
+  const ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+  window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferred=e;btn.hidden=false;});
+  window.addEventListener("appinstalled",()=>{btn.hidden=true;hint.hidden=true;deferred=null;});
+  if(ios)btn.hidden=false;
+  btn.addEventListener("click",async()=>{
+    if(deferred){deferred.prompt();const r=await deferred.userChoice.catch(()=>null);deferred=null;if(r&&r.outcome==="accepted")btn.hidden=true;return;}
+    hint.hidden=!hint.hidden;
+    hint.innerHTML=ios?"<b>iPhone/iPad:</b> In Safari unten auf <b>Teilen</b> (Quadrat mit Pfeil) tippen, dann <b>Zum Home-Bildschirm</b>.":"<b>Android:</b> In Chrome oben rechts auf <b>⋮</b> tippen, dann <b>App installieren</b>. <b>Computer:</b> In Chrome oder Edge rechts in der Adressleiste auf das Installieren-Symbol klicken.";
+  });
+})();
+
 if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
