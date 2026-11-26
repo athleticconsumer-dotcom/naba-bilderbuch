@@ -147,7 +147,7 @@ body:not(.allmode) #all{display:none}
   <div class="topbar"><span id="sync" class="sync">Nur auf diesem Gerät gespeichert</span><div class="topbtns"><button type="button" id="installBtn" class="authbtn" hidden>App installieren</button><button type="button" id="themeBtn" class="authbtn" aria-label="Darstellung wechseln">◐ System</button><button type="button" id="authBtn" class="authbtn" hidden>Mit Google anmelden</button></div></div>
   <div id="installHint" class="installhint" hidden></div>
   <header>
-    <h1>سُورَةُ النَّبَإِ · مِنْ ١ إِلَى ٣٠</h1>
+    <h1>سُورَةُ النَّبَإِ · مِنْ ١ إِلَى ٤٠</h1>
     <p>Ein Bilderbuch: zuerst die Ayat, dann eine kleine Geschichte, am Ende Spiele zum Üben.</p>
   </header>
   <nav class="tabs" id="tabs" aria-label="Ayat-Blöcke"></nav>
@@ -205,7 +205,17 @@ const AYAT={
 27:"إِنَّهُمْ=wahrlich, sie=h|كَانُوا=pflegten=v|لَا=nicht=h|يَرْجُونَ=zu erwarten=v|حِسَابًا=eine Abrechnung=n",
 28:"وَكَذَّبُوا=und sie leugneten=v|بِآيَاتِنَا=Unsere Zeichen=n|كِذَّابًا=völlig=n",
 29:"وَكُلَّ=und jedes=n|شَيْءٍ=Ding=n|أَحْصَيْنَاهُ=haben Wir erfasst=v|كِتَابًا=schriftlich=n",
-30:"فَذُوقُوا=so kostet!=v|فَلَن=denn nicht=h|نَّزِيدَكُمْ=werden Wir euch mehren=v|إِلَّا=außer=h|عَذَابًا=an Strafe=n"
+30:"فَذُوقُوا=so kostet!=v|فَلَن=denn nicht=h|نَّزِيدَكُمْ=werden Wir euch mehren=v|إِلَّا=außer=h|عَذَابًا=an Strafe=n",
+31:"إِنَّ=wahrlich=h|لِلْمُتَّقِينَ=für die Gottesfürchtigen=n|مَفَازًا=(gibt es) einen Ort des Erfolgs=n",
+32:"حَدَائِقَ=Gärten=n|وَأَعْنَابًا=und Weintrauben=n",
+33:"وَكَوَاعِبَ=und junge Gefährtinnen=n|أَتْرَابًا=gleichaltrige=n",
+34:"وَكَأْسًا=und einen Becher=n|دِهَاقًا=randvollen=n",
+35:"لَّا=nicht=h|يَسْمَعُونَ=hören sie=v|فِيهَا=darin=h|لَغْوًا=leeres Gerede=n|وَلَا=und nicht=h|كِذَّابًا=Lüge=n",
+36:"جَزَاءً=als Lohn=n|مِّن=von=h|رَّبِّكَ=deinem Herrn=n|عَطَاءً=als Gabe=n|حِسَابًا=reichliche=n",
+37:"رَّبِّ=dem Herrn=n|السَّمَاوَاتِ=der Himmel=n|وَالْأَرْضِ=und der Erde=n|وَمَا=und dessen, was=n|بَيْنَهُمَا=zwischen beiden ist=n|الرَّحْمَٰنِ=dem Allerbarmer=e|لَا=nicht=h|يَمْلِكُونَ=vermögen sie=v|مِنْهُ=vor Ihm=h|خِطَابًا=das Wort zu ergreifen=n",
+38:"يَوْمَ=am Tag, an dem=n|يَقُومُ=steht=v|الرُّوحُ=der Geist (Dschibril)=n|وَالْمَلَائِكَةُ=und die Engel=n|صَفًّا=in Reihe=n|لَّا=nicht=h|يَتَكَلَّمُونَ=sprechen sie=v|إِلَّا=außer=h|مَنْ=wem=n|أَذِنَ=erlaubt hat=v|لَهُ=ihm=h|الرَّحْمَٰنُ=der Allerbarmer=e|وَقَالَ=und der sagt=v|صَوَابًا=Richtiges=n",
+39:"ذَٰلِكَ=das ist=n|الْيَوْمُ=der Tag=n|الْحَقُّ=wahre=n|فَمَن=wer also=n|شَاءَ=will=v|اتَّخَذَ=nimmt=v|إِلَىٰ=zu=h|رَبِّهِ=seinem Herrn=n|مَآبًا=eine Heimkehr=n",
+40:"إِنَّا=wahrlich, Wir=h|أَنذَرْنَاكُمْ=haben euch gewarnt=v|عَذَابًا=vor einer Strafe=n|قَرِيبًا=nahen=n|يَوْمَ=am Tag, an dem=n|يَنظُرُ=schaut=v|الْمَرْءُ=der Mensch=n|مَا=auf das, was=n|قَدَّمَتْ=vorausgeschickt haben=v|يَدَاهُ=seine Hände=n|وَيَقُولُ=und sagt=v|الْكَافِرُ=der Ungläubige=n|يَا=o=h|لَيْتَنِي=wäre ich doch=h|كُنتُ=gewesen=v|تُرَابًا=Staub=n"
 };
 
 const BLOCKS=[
@@ -266,6 +276,28 @@ const BLOCKS=[
 ["ثُمَّ=dann=h|فَتَحَ=öffnete er=v|دَفْتَرَهُ=sein Heft=n|وَقَالَ=und sagte=v|:|وَكُلَّ=und jedes=*n|شَيْءٍ=Ding=*n|أَحْصَيْنَاهُ=haben wir erfasst=*v|كِتَابًا=schriftlich=*n|.","Dann öffnete er sein Heft und sagte: Und jedes Ding haben wir schriftlich erfasst."],
 ["فَذُوقُوا=so kostet=*v|نَتِيجَةَ=das Ergebnis=n|كَسَلِكُمْ=eurer Faulheit=n|،|فَلَنْ=denn nicht=*h|نَزِيدَكُمْ=werden wir euch mehren=*v|إِلَّا=außer=*h|عَمَلًا=an Arbeit=n|!","So kostet das Ergebnis eurer Faulheit, wir geben euch nur noch mehr Arbeit!"],
 ["قَالَ=sagte=v|ابْنُ=der Sohn=n|التَّاجِرِ=des Händlers=n|:|هَذَا=das ist=n|فِي=im=h|الدُّنْيَا=Diesseits=n|،|أَمَّا=was aber=h|الطُّغَاةُ=die Tyrannen (betrifft)=n|فِي=im=h|الْآخِرَةِ=Jenseits=n|فَلَا=so nicht=h|يُزَادُونَ=wird ihnen gemehrt=v|إِلَّا=außer=h|عَذَابًا=an Strafe=*n|.","Der Sohn des Händlers sagte: Das ist im Diesseits. Den Tyrannen im Jenseits aber wird nur die Strafe gemehrt."]
+]},
+{from:31,to:35,title:"Der Obstgarten",story:[
+["دَعَا=lud ein=v|رَجُلٌ=ein Mann=n|كَرِيمٌ=großzügiger=n|ضُيُوفَهُ=seine Gäste=n|إِلَى=in=h|بُسْتَانِهِ=seinen Obstgarten=n|.","Ein großzügiger Mann lud seine Gäste in seinen Obstgarten ein."],
+["قَالَ=er sagte=v|:|إِنَّ=wahrlich=*h|لِلْمُتَّقِينَ=für die Gottesfürchtigen=*n|فِي=im=h|الْجَنَّةِ=Paradies=n|مَفَازًا=einen Ort des Erfolgs=*n|أَعْظَمَ=größer=n|مِنْ=als=h|هَذَا=dieser=n|.","Er sagte: Wahrlich, für die Gottesfürchtigen gibt es im Paradies einen Ort des Erfolgs, größer als dieser."],
+["رَأَى=sahen=v|الضُّيُوفُ=die Gäste=n|حَدَائِقَ=Gärten=*n|وَأَعْنَابًا=und Weintrauben=*n|.","Die Gäste sahen Gärten und Weintrauben."],
+["وَقَدَّمَ=und er reichte=v|لَهُمْ=ihnen=h|طَعَامًا=Essen=n|وَكَأْسًا=und einen Becher=*n|دِهَاقًا=randvollen=*n|.","Er reichte ihnen Essen und einen randvollen Becher."],
+["جَلَسُوا=sie saßen=v|فِي=im=h|الْحَدِيقَةِ=Garten=n|،|لَا=nicht=*h|يَسْمَعُونَ=hörten sie=*v|فِيهَا=darin=*h|لَغْوًا=leeres Gerede=*n|وَلَا=und nicht=*h|كِذَّابًا=Lüge=*n|.","Sie saßen im Garten und hörten darin weder leeres Gerede noch Lüge."],
+["ثُمَّ=dann=h|قَرَأَ=las=v|الرَّجُلُ=der Mann=n|:|﴿|حَدَائِقَ=Gärten=*n|وَأَعْنَابًا=und Weintrauben=*n|۝|وَكَوَاعِبَ=und junge Gefährtinnen=*n|أَتْرَابًا=gleichaltrige=*n|﴾","Dann las der Mann: Gärten und Weintrauben, und gleichaltrige junge Gefährtinnen."],
+["قَالَ=sagten=v|الضُّيُوفُ=die Gäste=n|:|هَذَا=dieser=n|الْبُسْتَانُ=Garten=n|جَمِيلٌ=ist schön=n|،|وَلَكِنَّ=aber=h|الْجَنَّةَ=das Paradies=n|أَجْمَلُ=ist schöner=n|.","Die Gäste sagten: Dieser Garten ist schön, aber das Paradies ist schöner."]
+]},
+{from:36,to:40,title:"Der letzte Schultag",story:[
+["وَقَفَ=standen=v|الطُّلَّابُ=die Schüler=n|فِي=am=h|آخِرِ=Ende=n|السَّنَةِ=des Jahres=n|صَفًّا=in einer Reihe=*n|.","Am Ende des Jahres standen die Schüler in einer Reihe."],
+["كَانُوا=sie=v|لَا=nicht=*h|يَتَكَلَّمُونَ=sprachen=*v|إِلَّا=außer=*h|مَنْ=wem=*n|أَذِنَ=erlaubt hatte=*v|لَهُ=ihm=*h|الْمُعَلِّمُ=der Lehrer=n|.","Sie sprachen nicht, außer wem der Lehrer es erlaubt hatte."],
+["سَأَلَ=fragte=v|الْمُعَلِّمُ=der Lehrer=n|طَالِبًا=einen Schüler=n|،|فَقَامَ=da stand er auf=v|وَقَالَ=und sagte=*v|صَوَابًا=Richtiges=*n|.","Der Lehrer fragte einen Schüler, da stand er auf und sagte das Richtige."],
+["ثُمَّ=dann=h|أَعْطَى=gab er=v|كُلَّ=jedem=n|طَالِبٍ=Schüler=n|شَهَادَتَهُ=sein Zeugnis=n|وَقَالَ=und sagte=v|:|الْيَوْمَ=heute=n|يَنْظُرُ=schaut=*v|الْمَرْءُ=der Mensch=*n|إِلَى=auf=h|مَا=das, was=*n|قَدَّمَتْ=vorausgeschickt haben=*v|يَدَاهُ=seine Hände=*n|.","Dann gab er jedem Schüler sein Zeugnis und sagte: Heute schaut der Mensch auf das, was seine Hände vorausgeschickt haben."],
+["قَالَ=sagte=v|طَالِبٌ=ein Schüler=n|كَسُولٌ=fauler=n|:|يَا=o=*h|لَيْتَنِي=hätte ich doch=*h|دَرَسْتُ=gelernt=v|!","Ein fauler Schüler sagte: Hätte ich doch gelernt!"],
+["قَالَ=sagte=v|الْمُعَلِّمُ=der Lehrer=n|:|إِنَّا=wahrlich, wir=*h|أَنْذَرْنَاكُمْ=haben euch gewarnt=*v|،|فَمَنْ=wer also=*n|شَاءَ=wollte=*v|دَرَسَ=hat gelernt=v|.","Der Lehrer sagte: Wir haben euch gewarnt. Wer wollte, hat gelernt."],
+["ثُمَّ=dann=h|قَالَ=sagte er=v|:|وَاللهُ=und Allah=e|أَنْذَرَنَا=hat uns gewarnt=v|عَذَابًا=vor einer Strafe=*n|قَرِيبًا=nahen=*n|،|يَوْمَ=am Tag, an dem=*n|يَقُومُ=steht=*v|الرُّوحُ=der Geist=*n|وَالْمَلَائِكَةُ=und die Engel=*n|صَفًّا=in Reihe=*n|.","Dann sagte er: Und Allah hat uns vor einer nahen Strafe gewarnt, am Tag, an dem der Geist und die Engel in Reihe stehen."],
+["لَا=nicht=*h|يَمْلِكُونَ=vermögen sie=*v|مِنْهُ=vor Ihm=*h|خِطَابًا=das Wort zu ergreifen=*n|إِلَّا=außer=h|بِإِذْنِ=mit Erlaubnis=n|رَبِّ=des Herrn=*n|السَّمَاوَاتِ=der Himmel=*n|وَالْأَرْضِ=und der Erde=*n|وَمَا=und dessen, was=*n|بَيْنَهُمَا=zwischen beiden ist=*n|،|الرَّحْمَنِ=des Allerbarmers=*e|.","Sie vermögen vor Ihm nicht das Wort zu ergreifen, außer mit Erlaubnis des Herrn der Himmel und der Erde und dessen, was zwischen beiden ist, des Allerbarmers."],
+["ذَلِكَ=das ist=*n|الْيَوْمُ=der Tag=*n|الْحَقُّ=wahre=*n|،|فَمَنْ=wer also=*n|شَاءَ=will=*v|اتَّخَذَ=nimmt=*v|إِلَى=zu=*h|رَبِّهِ=seinem Herrn=*n|مَآبًا=eine Heimkehr=*n|.","Das ist der wahre Tag. Wer also will, nimmt den Weg der Heimkehr zu seinem Herrn."],
+["يَا=o=h|بُنَيَّ=mein Sohn=n|،|اعْمَلْ=tu=v|خَيْرًا=Gutes=n|،|تَأْتِكَ=dann kommt zu dir=v|الْجَنَّةُ=das Paradies=n|جَزَاءً=als Lohn=*n|مِنْ=von=*h|رَبِّكَ=deinem Herrn=*n|،|عَطَاءً=als Gabe=*n|حِسَابًا=reichliche=*n|.","Mein Sohn, tu Gutes, dann kommt das Paradies zu dir, als Lohn von deinem Herrn, als reichliche Gabe."],
+["وَيَوْمَئِذٍ=und an jenem Tag=n|يَنْدَمُ=bereut=v|الْكَافِرُ=der Ungläubige=*n|وَيَقُولُ=und sagt=*v|:|يَا=o=*h|لَيْتَنِي=wäre ich doch=*h|كُنْتُ=gewesen=*v|تُرَابًا=Staub=*n|!","An jenem Tag bereut der Ungläubige und sagt: Wäre ich doch Staub gewesen!"]
 ]}
 ];
 
@@ -347,7 +379,8 @@ function person(x,y,s=1,o={}){
   if(o.crown)g+=`<path d="M-12 -82 L-12 -96 L-6 -88 L0 -98 L6 -88 L12 -96 L12 -82Z" fill="#e8b631" stroke="#b8862a" stroke-width="1"/>`;
   g+=`</g>`; add(g);
 }
-const F={sky,indoor,ground,sun,moon,mountains,dunes,tent,peg,house,lamp,cloud,rain,well,sprouts,rows,tree,stall,bus,school,bell,board,writtenWall,lake,shimmer,castle,jug,book,notebook,scale,boxes,skyGates,heavens,bubble,zzz,person};
+function grapes(x,y,s=1){add(`<g transform="translate(${x} ${y}) scale(${s})"><path d="M-30 -40 Q0 -60 30 -40" stroke="#6d8a3a" stroke-width="3" fill="none"/><path d="M0 -50 l14 -8 l-2 10Z" fill="#6fae52"/>${[[0,-34],[-8,-26],[8,-26],[-12,-18],[0,-18],[12,-18],[-6,-10],[6,-10],[0,-2]].map(([a,b])=>`<circle cx="${a}" cy="${b}" r="6" fill="#7b4a8a"/>`).join("")}</g>`)}
+const F={grapes,sky,indoor,ground,sun,moon,mountains,dunes,tent,peg,house,lamp,cloud,rain,well,sprouts,rows,tree,stall,bus,school,bell,board,writtenWall,lake,shimmer,castle,jug,book,notebook,scale,boxes,skyGates,heavens,bubble,zzz,person};
 return function(spec){out="";uid++;spec.forEach(([fn,...a])=>F[fn](...a));return `<svg viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">${out}</svg>`;};
 })();
 
@@ -426,6 +459,30 @@ const SCENES=[
  [["indoor"],["notebook",250,130],["person",120,214,1,o(P.haendler,{arm:"point",dir:1})]],
  [["sky","day"],["ground","sand",190],["boxes",330,212],["person",150,226,1,{c:"#c79a3d",arm:"carry"}],["person",220,226,1,{c:"#6f9a5e",arm:"carry"}],["person",80,226,1,o(P.haendler,{arm:"point",dir:1})]],
  [["sky","dusk"],["ground","sand",195],["scale",270,212,1],["person",130,226,1,o(P.hsohn,{arm:"up"})],["bubble",110,112,"!"]]
+],
+// 31–35 Obstgarten
+[
+ [["sky","day"],["sun",350,40],["ground","grass",190],["tree",60,200,1],["tree",330,200,.95],["person",160,224,1,o(P.bauer,{c:"#4f8f8f",arm:"point",dir:1})],...crowd([210,240,270],226,.85).map(e=>(e[4]=Object.assign({},e[4],{dir:-1}),e))],
+ [["sky","day"],["ground","grass",190],["tree",300,200,1.1],["grapes",230,120,1],["person",150,224,1,o(P.bauer,{c:"#4f8f8f",arm:"up"})],["bubble",120,110,"!"]],
+ [["sky","day"],["ground","grass",190],["tree",70,200,1],["tree",160,195,.85],["grapes",250,110,1.1],["grapes",330,120,1],...crowd([240,290],228,.8)],
+ [["sky","day"],["ground","grass",190],["tree",340,200,1],["jug",200,212],["person",140,226,1,o(P.bauer,{c:"#4f8f8f",arm:"point",dir:1})],...crowd([250,285],228,.8).map(e=>(e[4]=Object.assign({},e[4],{dir:-1}),e))],
+ [["sky","day"],["ground","grass",190],["tree",60,200,1],["tree",340,200,1],...crowd([140,180,220,260],226,.85)],
+ [["sky","dusk"],["ground","grass",190],["tree",320,200,1],["grapes",80,120,1],["person",180,224,1,o(P.bauer,{c:"#4f8f8f",arm:"book"})],...crowd([240,270],228,.75).map(e=>(e[4]=Object.assign({},e[4],{dir:-1}),e))],
+ [["sky","dusk"],["sun",350,175,20],["ground","grass",190],["tree",60,200,1],...crowd([150,190,230],226,.85),["bubble",190,110,"♡"]]
+],
+// 36–40 Letzter Schultag
+[
+ [["indoor"],["board",130,40,3],...crowd([50,100,150,200,250,300,350],232,.75)],
+ [["indoor"],["board",30,45,3],["person",210,214,1,o(P.lehrer,{arm:"point",dir:1})],["person",290,226,.75,{c:"#6f9a5e",arm:"up",dir:-1}],...crowd([330,365],230,.7)],
+ [["indoor"],["board",240,45,3,130],["person",120,214,1,o(P.lehrer,{dir:1})],["person",190,226,.8,{c:"#c79a3d",arm:"up"}],["bubble",210,120,"✓",-1]],
+ [["indoor"],["board",30,45,3],["person",200,214,1,o(P.lehrer,{arm:"book",dir:1})],...crowd([280,320,360],230,.7)],
+ [["indoor"],["board",250,45,3,120],["person",150,226,.85,{c:"#b35c44",dir:1}],["bubble",165,120,"!"]],
+ [["indoor"],["board",30,45,4],["person",230,214,1,o(P.lehrer,{arm:"up",dir:-1})],["bubble",270,100,"!",-1],...crowd([320,360],230,.7)],
+ [["sky","dusk"],["skyGates"],["cloud",30,195,1.1],["cloud",310,200,1.1]],
+ [["sky","day"],["heavens"],["sun",340,45,18],["mountains",20,215,.8],["ground","grass",215]],
+ [["sky","dusk"],["sun",200,195,30],["ground","sand",200],["rows",140,260,226]],
+ [["sky","day"],["sun",350,40],["ground","grass",185],["tree",60,205,1],["tree",150,198,.85],["grapes",250,120,1],["tree",330,205,1.05]],
+ [["sky","dark"],["ground","sand",195],["shimmer",40,360,170],["shimmer",80,320,200]]
 ]
 ];
 

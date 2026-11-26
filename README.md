@@ -1,6 +1,6 @@
 # An-Naba Bilderbuch
 
-Surat an-Naba, Ayat 1–30, als Bilderbuch in sechs Blöcken:
+Surat an-Naba, Ayat 1–40, als Bilderbuch in sechs Blöcken:
 
 - **Ayat**: Wort für Wort mit Harakat, farbkodiert (rot Verb, blau Nomen, grün Partikel, schwarz Name und Versnummer), Deutsch darunter
 - **Geschichte**: ein Satz pro Seite mit Bild; alle Wörter der Ayat kommen darin vor (gelb hinterlegt)
